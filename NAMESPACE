@@ -1,0 +1,6 @@
+useDynLib(rocmice, .registration=TRUE)
+importFrom(Rcpp, evalCpp)
+exportPattern("^[[:alpha:]]+")
+importFrom("stats", "qt")
+import("dplyr")
+importFrom("tidyr", "fill")
