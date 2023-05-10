@@ -97,7 +97,7 @@ pool_roc_rr <- function(
 logit <- make.link("logit")$linkfun
 
 #' Logit Transformation inv
-#' @param mu value to transform
+#' @param eta value to transform
 #' @importFrom stats make.link
 #' @keywords Internal
 invlogit <- make.link("logit")$linkinv
@@ -260,6 +260,7 @@ get_unique_vals <- function(data, score, digits = 3) {
 #' Adds backtransformed tpr, fpr and optionally confidence intervals to df
 #' 
 #' @param df data.frame containing tpr, fpr and their variances
+#' @param ci Logical, is there a ci to backtransform
 #' 
 #' #' @return 
 #' a data.frame with the elements:

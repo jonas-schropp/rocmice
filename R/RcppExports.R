@@ -3,7 +3,7 @@
 
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
-#' @noRd
+#' 
 #' @keywords Internal
 tpr <- function(r, p) {
     .Call(`_rocmice_tpr`, r, p)
@@ -11,7 +11,7 @@ tpr <- function(r, p) {
 
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
-#' @noRd
+#' 
 #' @keywords Internal
 fpr <- function(r, p) {
     .Call(`_rocmice_fpr`, r, p)
@@ -19,7 +19,7 @@ fpr <- function(r, p) {
 
 #' @param est vector of tpr or fpr
 #' @param n number of positives in r or negatives in r
-#' @noRd
+#' 
 #' @keywords Internal
 var_prop <- function(est, n) {
     .Call(`_rocmice_var_prop`, est, n)
@@ -27,7 +27,7 @@ var_prop <- function(est, n) {
 
 #' @param score NumericVector of scores
 #' @param cutoff double, the cutoff
-#' @noRd
+#' 
 #' @keywords Internal
 cut_off <- function(score, cutoff) {
     .Call(`_rocmice_cut_off`, score, cutoff)
@@ -35,7 +35,7 @@ cut_off <- function(score, cutoff) {
 
 #' @param var NumericVector of variances
 #' @param est NumericVector of proportions
-#' @noRd
+#' 
 #' @keywords Internal
 varlogit <- function(var, est) {
     .Call(`_rocmice_varlogit`, var, est)
@@ -49,7 +49,7 @@ varlogit <- function(var, est) {
 #' @return 
 #' A matrix of dimensions length(score) x length(cutoffs)
 #' 
-#' @noRd
+#' 
 #' @keywords Internal
 apply_cut_off <- function(score, unique_vals) {
     .Call(`_rocmice_apply_cut_off`, score, unique_vals)
@@ -58,7 +58,7 @@ apply_cut_off <- function(score, unique_vals) {
 #' Function to count number of val in x
 #' @param x IntegerVector
 #' @param val int, the value to count
-#' @noRd
+#' 
 #' @keywords Internal
 count_vals <- function(x, val) {
     .Call(`_rocmice_count_vals`, x, val)
@@ -75,7 +75,7 @@ count_vals <- function(x, val) {
 #' \item{tpri}{TPR values}
 #' \item{fpri}{FPR values}
 #' \item{vartpri}{variance for TPR}
-#' @noRd
+#' 
 #' @keywords Internal
 #'
 apply_metrics <- function(m, r) {
@@ -83,29 +83,30 @@ apply_metrics <- function(m, r) {
 }
 
 #' Equivalent to R rowMeans
-#' @noRd
+#' @param x a matrix
 #' @keywords Internal
 rcpp_rowMeans <- function(x) {
     .Call(`_rocmice_rcpp_rowMeans`, x)
 }
 
 #' Equivalent to R var
-#' @noRd
+#' @param samples a vector
 #' @keywords Internal
 rcpp_var <- function(samples) {
     .Call(`_rocmice_rcpp_var`, samples)
 }
 
 #' Apply var to matrix rows
-#' @noRd
+#' @param x a matrix
 #' @keywords Internal
 rowVars <- function(x) {
     .Call(`_rocmice_rowVars`, x)
 }
 
+#' Pool mean and variance for many rows following Rubin's Rules
 #' @param est a matrix of (logit-transformed) proportion by imp
 #' @param var a matrix of (logit transformed) variance by imp
-#' @noRd
+#' 
 #' @keywords Internal
 pool_rr_m <- function(est, var) {
     .Call(`_rocmice_pool_rr_m`, est, var)

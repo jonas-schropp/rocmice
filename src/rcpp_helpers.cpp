@@ -1,10 +1,10 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// TPR
+//' TPR
 //' @param r response vector, 0 / 1
 //' @param p prediction vector, 0 / 1
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 double tpr(IntegerVector r, IntegerVector p) {
@@ -24,10 +24,10 @@ double tpr(IntegerVector r, IntegerVector p) {
   return (double) true_positives / num_positives;
 }
 
-// FPR
+//' FPR
 //' @param r response vector, 0 / 1
 //' @param p prediction vector, 0 / 1
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 double fpr(IntegerVector r, IntegerVector p) {
@@ -47,10 +47,10 @@ double fpr(IntegerVector r, IntegerVector p) {
   return (double) false_positives / num_negatives;
 }
 
-// Variance for a proportion
+//' Variance for a proportion
 //' @param est vector of tpr or fpr
 //' @param n number of positives in r or negatives in r
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 NumericVector var_prop(NumericVector est, double n) {
@@ -64,10 +64,10 @@ NumericVector var_prop(NumericVector est, double n) {
   return variances;
 }
 
-// check if a value is bigger than a cutoff
+//' check if a value is bigger than a cutoff
 //' @param score NumericVector of scores
 //' @param cutoff double, the cutoff
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 IntegerVector cut_off(NumericVector score, double cutoff) {
@@ -81,10 +81,10 @@ IntegerVector cut_off(NumericVector score, double cutoff) {
   return result;
 }
 
-// transform variances to logit scale
+//' transform variances to logit scale
 //' @param var NumericVector of variances
 //' @param est NumericVector of proportions
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 NumericVector varlogit(NumericVector var, NumericVector est) {
@@ -111,7 +111,7 @@ NumericVector varlogit(NumericVector var, NumericVector est) {
 //' @return 
 //' A matrix of dimensions length(score) x length(cutoffs)
 //' 
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 NumericMatrix apply_cut_off(NumericVector score, NumericVector unique_vals) {
@@ -129,7 +129,7 @@ NumericMatrix apply_cut_off(NumericVector score, NumericVector unique_vals) {
 //' Function to count number of val in x
 //' @param x IntegerVector
 //' @param val int, the value to count
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 int count_vals(IntegerVector x, int val) {
@@ -154,7 +154,7 @@ int count_vals(IntegerVector x, int val) {
 //' \item{tpri}{TPR values}
 //' \item{fpri}{FPR values}
 //' \item{vartpri}{variance for TPR}
-//' @noRd
+//' 
 //' @keywords Internal
 //'
 // [[Rcpp::export]]
@@ -183,7 +183,7 @@ List apply_metrics(const IntegerMatrix& m, const IntegerVector& r) {
 
 
 //' Equivalent to R rowMeans
-//' @noRd
+//' @param x a matrix
 //' @keywords Internal
 // [[Rcpp::export]]
 NumericVector rcpp_rowMeans(NumericMatrix x) {
@@ -202,7 +202,7 @@ NumericVector rcpp_rowMeans(NumericMatrix x) {
 
 
 //' Equivalent to R var
-//' @noRd
+//' @param samples a vector
 //' @keywords Internal
 // [[Rcpp::export]]
 double rcpp_var(NumericVector samples)
@@ -223,7 +223,7 @@ double rcpp_var(NumericVector samples)
 
 
 //' Apply var to matrix rows
-//' @noRd
+//' @param x a matrix
 //' @keywords Internal
 // [[Rcpp::export]]
 NumericVector rowVars(NumericMatrix x) {
@@ -243,9 +243,10 @@ NumericVector rowVars(NumericMatrix x) {
 
 
 
+//' Pool mean and variance for many rows following Rubin's Rules
 //' @param est a matrix of (logit-transformed) proportion by imp
 //' @param var a matrix of (logit transformed) variance by imp
-//' @noRd
+//' 
 //' @keywords Internal
 // [[Rcpp::export]]
 List pool_rr_m (NumericMatrix est, NumericMatrix var) {
