@@ -4,14 +4,18 @@
 \alias{tpr}
 \title{TPR}
 \usage{
-tpr(r, p)
+tpr(r, p, corr)
 }
 \arguments{
 \item{r}{response vector, 0 / 1}
 
 \item{p}{prediction vector, 0 / 1}
+
+\item{corr}{continuity correction}
 }
 \description{
+TPR
+
 TPR
 }
 \keyword{Internal}

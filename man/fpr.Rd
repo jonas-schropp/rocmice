@@ -4,14 +4,18 @@
 \alias{fpr}
 \title{FPR}
 \usage{
-fpr(r, p)
+fpr(r, p, corr)
 }
 \arguments{
 \item{r}{response vector, 0 / 1}
 
 \item{p}{prediction vector, 0 / 1}
+
+\item{corr}{continuity correction}
 }
 \description{
+FPR
+
 FPR
 }
 \keyword{Internal}

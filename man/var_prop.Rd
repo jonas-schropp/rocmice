@@ -13,5 +13,7 @@ var_prop(est, n)
 }
 \description{
 Variance for a proportion
+
+Variance for a proportion
 }
 \keyword{Internal}

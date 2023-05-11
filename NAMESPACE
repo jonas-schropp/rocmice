@@ -1,4 +1,6 @@
 useDynLib(rocmice, .registration=TRUE)
+export("pool_roc_rr")
+
 importFrom(Rcpp, evalCpp)
 
 importFrom("stats", "qt")

@@ -12,7 +12,7 @@ pool_roc_rr(
   fpr_vals = seq(from = 0.001, to = 0.999, by = 0.001),
   backtransform = FALSE,
   ci.level = NULL,
-  tol = 0.001,
+  corr = 0.1,
   verbose = TRUE
 )
 }
@@ -36,8 +36,8 @@ to `seq(from=0.001, to=0.999, by=0.001)`}
 \item{ci.level}{Double between 0-1. NULL if no confidence intervals are 
 desired (or you are going to bootstrap confidence intervals).}
 
-\item{tol}{tolerance to use for 0 and 1 values (due to logit trans). 1e-3 
-by default. `FALSE` if no tolerance should be used instead for 0 values.}
+\item{corr}{continuity correction. `FALSE` if no continuity correction should 
+be used instead for 0 values.}
 
 \item{verbose}{TRUE/FALSE, should information be printed to the screen while 
 the algorithm is running?}

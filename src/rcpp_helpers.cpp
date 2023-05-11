@@ -7,10 +7,10 @@ using namespace Rcpp;
 //' 
 //' @keywords Internal
 // [[Rcpp::export]]
-double tpr(IntegerVector r, IntegerVector p) {
+double tpr(IntegerVector r, IntegerVector p, double corr) {
   int n = r.size();
-  int num_positives = 0;
-  int true_positives = 0;
+  int num_positives = 0.0;
+  int true_positives = 0.0;
 
   for (int i = 0; i < n; i++) {
     if (r[i] == 1) {
@@ -21,7 +21,7 @@ double tpr(IntegerVector r, IntegerVector p) {
     }
   }
 
-  return (double) true_positives / num_positives;
+  return (double) (true_positives + corr) / (num_positives + 2*corr);
 }
 
 //' FPR
@@ -30,10 +30,10 @@ double tpr(IntegerVector r, IntegerVector p) {
 //' 
 //' @keywords Internal
 // [[Rcpp::export]]
-double fpr(IntegerVector r, IntegerVector p) {
+double fpr(IntegerVector r, IntegerVector p, double corr) {
   int n = r.size();
-  int num_negatives = 0;
-  int false_positives = 0;
+  int num_negatives = 0.0;
+  int false_positives = 0.0;
 
   for (int i = 0; i < n; i++) {
     if (r[i] == 0) {
@@ -44,7 +44,7 @@ double fpr(IntegerVector r, IntegerVector p) {
     }
   }
 
-  return (double) false_positives / num_negatives;
+  return (double) (false_positives + corr) / (num_negatives + 2*corr);
 }
 
 //' Variance for a proportion
@@ -158,7 +158,7 @@ int count_vals(IntegerVector x, int val) {
 //' @keywords Internal
 //'
 // [[Rcpp::export]]
-List apply_metrics(const IntegerMatrix& m, const IntegerVector& r) {
+List apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr) {
   int len = m.ncol();
   NumericVector tpri(len);
   NumericVector fpri(len);
@@ -168,8 +168,8 @@ List apply_metrics(const IntegerMatrix& m, const IntegerVector& r) {
   
   for (int i = 0; i < len; i++) {
     IntegerVector col = m(_, i);
-    tpri[i] = tpr(r, col);
-    fpri[i] = fpr(r, col);
+    tpri[i] = tpr(r, col, corr);
+    fpri[i] = fpr(r, col, corr);
   }
   
   vartpri = var_prop(tpri, pos);

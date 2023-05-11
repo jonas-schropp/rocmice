@@ -19,8 +19,8 @@
 #' @param backtransform Should the results be transformed back?
 #' @param ci.level Double between 0-1. NULL if no confidence intervals are 
 #' desired (or you are going to bootstrap confidence intervals).
-#' @param tol tolerance to use for 0 and 1 values (due to logit trans). 1e-3 
-#' by default. `FALSE` if no tolerance should be used instead for 0 values.
+#' @param corr continuity correction. `FALSE` if no continuity correction should 
+#' be used instead for 0 values.
 #' @param verbose TRUE/FALSE, should information be printed to the screen while 
 #' the algorithm is running?
 #'  
@@ -45,7 +45,7 @@ pool_roc_rr <- function(
     fpr_vals = seq(from=0.001, to=0.999, by=0.001),
     backtransform = FALSE,
     ci.level = NULL,
-    tol = 0.001,
+    corr = 0.1,
     verbose = TRUE
 ) {
   
@@ -69,7 +69,7 @@ pool_roc_rr <- function(
     nit_vals <- data[[i]][[score]]
     m <- apply_cut_off(nit_vals, unique_vals)
     
-    cs[[i]] <- apply_metrics(m, r) |> 
+    cs[[i]] <- apply_metrics(m, r, corr) |> 
       interpol(fpr_vals) |>
       add_var_roc(r) |>
       transform_metrics()
@@ -82,6 +82,10 @@ pool_roc_rr <- function(
   # Combine and pool
   l <- combine_metrics(cs) |> pool_metrics()
   
+  #l$var_roc[is.infinite(l$var_roc)] <- tol
+  #l$roc[is.infinite(l$roc) & l$roc < 0] <- logit(tol)
+  #l$roc[is.infinite(l$roc) & l$roc > 0] <- logit(1-tol)
+  
   if (!is.null(ci.level)) l <- add_ci(l, ci.level, target = r)
   
   df <- data.frame(l)
@@ -90,10 +94,6 @@ pool_roc_rr <- function(
   if (backtransform) {
     df <- backtransform_df(df, ci = !is.null(ci.level))
   }
-  
-  df$var_roc_logit[is.infinite(df$var_roc_logit)] <- tol
-  df$roc_logit[is.infinite(df$roc_logit) & df$roc_logit < 0] <- logit(tol)
-  df$roc_logit[is.infinite(df$roc_logit) & df$roc_logit > 0] <- logit(1-tol)
   
   return(df)
   

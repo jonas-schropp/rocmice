@@ -13,5 +13,7 @@ varlogit(var, est)
 }
 \description{
 transform variances to logit scale
+
+transform variances to logit scale
 }
 \keyword{Internal}

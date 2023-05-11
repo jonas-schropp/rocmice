@@ -4,13 +4,15 @@
 \alias{apply_metrics}
 \title{Function to apply metrics}
 \usage{
-apply_metrics(m, r)
+apply_metrics(m, r, corr)
 }
 \arguments{
 \item{m}{matrix with one column for each cutoff and one row for each 
 value in score}
 
 \item{r}{binary response vector}
+
+\item{corr}{continuity correction}
 }
 \value{
 a list with 3 elements:

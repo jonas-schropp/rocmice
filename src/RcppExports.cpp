@@ -11,26 +11,28 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // tpr
-double tpr(IntegerVector r, IntegerVector p);
-RcppExport SEXP _rocmice_tpr(SEXP rSEXP, SEXP pSEXP) {
+double tpr(IntegerVector r, IntegerVector p, double corr);
+RcppExport SEXP _rocmice_tpr(SEXP rSEXP, SEXP pSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type r(rSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(tpr(r, p));
+    Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
+    rcpp_result_gen = Rcpp::wrap(tpr(r, p, corr));
     return rcpp_result_gen;
 END_RCPP
 }
 // fpr
-double fpr(IntegerVector r, IntegerVector p);
-RcppExport SEXP _rocmice_fpr(SEXP rSEXP, SEXP pSEXP) {
+double fpr(IntegerVector r, IntegerVector p, double corr);
+RcppExport SEXP _rocmice_fpr(SEXP rSEXP, SEXP pSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type r(rSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(fpr(r, p));
+    Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
+    rcpp_result_gen = Rcpp::wrap(fpr(r, p, corr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -95,14 +97,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // apply_metrics
-List apply_metrics(const IntegerMatrix& m, const IntegerVector& r);
-RcppExport SEXP _rocmice_apply_metrics(SEXP mSEXP, SEXP rSEXP) {
+List apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr);
+RcppExport SEXP _rocmice_apply_metrics(SEXP mSEXP, SEXP rSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const IntegerMatrix& >::type m(mSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type r(rSEXP);
-    rcpp_result_gen = Rcpp::wrap(apply_metrics(m, r));
+    Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
+    rcpp_result_gen = Rcpp::wrap(apply_metrics(m, r, corr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -153,14 +156,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rocmice_tpr", (DL_FUNC) &_rocmice_tpr, 2},
-    {"_rocmice_fpr", (DL_FUNC) &_rocmice_fpr, 2},
+    {"_rocmice_tpr", (DL_FUNC) &_rocmice_tpr, 3},
+    {"_rocmice_fpr", (DL_FUNC) &_rocmice_fpr, 3},
     {"_rocmice_var_prop", (DL_FUNC) &_rocmice_var_prop, 2},
     {"_rocmice_cut_off", (DL_FUNC) &_rocmice_cut_off, 2},
     {"_rocmice_varlogit", (DL_FUNC) &_rocmice_varlogit, 2},
     {"_rocmice_apply_cut_off", (DL_FUNC) &_rocmice_apply_cut_off, 2},
     {"_rocmice_count_vals", (DL_FUNC) &_rocmice_count_vals, 2},
-    {"_rocmice_apply_metrics", (DL_FUNC) &_rocmice_apply_metrics, 2},
+    {"_rocmice_apply_metrics", (DL_FUNC) &_rocmice_apply_metrics, 3},
     {"_rocmice_rcpp_rowMeans", (DL_FUNC) &_rocmice_rcpp_rowMeans, 1},
     {"_rocmice_rcpp_var", (DL_FUNC) &_rocmice_rcpp_var, 1},
     {"_rocmice_rowVars", (DL_FUNC) &_rocmice_rowVars, 1},

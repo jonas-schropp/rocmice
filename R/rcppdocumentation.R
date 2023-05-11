@@ -2,6 +2,7 @@
 #' @name tpr
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
+#' @param corr continuity correction
 #' 
 #' @keywords Internal
 tpr
@@ -10,6 +11,7 @@ tpr
 #' @name fpr
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
+#' @param corr continuity correction
 #' 
 #' @keywords Internal
 fpr
@@ -67,6 +69,7 @@ count_vals
 #' @param m matrix with one column for each cutoff and one row for each 
 #' value in score
 #' @param r binary response vector
+#' @param corr continuity correction
 #' 
 #' @return 
 #' a list with 3 elements:

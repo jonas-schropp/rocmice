@@ -13,5 +13,7 @@ cut_off(score, cutoff)
 }
 \description{
 check if a value is bigger than a cutoff
+
+check if a value is bigger than a cutoff
 }
 \keyword{Internal}
