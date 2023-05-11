@@ -13,15 +13,17 @@ backtransform_df(df, ci)
 
 #' @return 
 a data.frame with the elements:
-\item{tpr_logit}{logit-transformed TPR values}
-\item{fpr_logit}{logit-transformed FPR values}
-\item{var_tpr_logit}{logit-transformed variance for TPR}
-\item{tpr}{TPR}
-\item{fpr}{FPR}
-\item{ll_tpr_logit}{lower limit of CI for logit-transformed TPR values}
-\item{ul_tpr_logit}{upper limit of CI for logit-transformed TPR values}
-\item{ll_tpr}{lower limit of CI for TPR values}
-\item{ul_tpr}{upper limit of CI for TPR values}}
+\itemize{
+  \item{tpr_logit}{logit-transformed TPR values}
+  \item{fpr_logit}{logit-transformed FPR values}
+  \item{var_tpr_logit}{logit-transformed variance for TPR}
+  \item{tpr}{TPR}
+  \item{fpr}{FPR}
+  \item{ll_tpr_logit}{lower limit of CI for logit-transformed TPR values}
+  \item{ul_tpr_logit}{upper limit of CI for logit-transformed TPR values}
+  \item{ll_tpr}{lower limit of CI for TPR values}
+  \item{ul_tpr}{upper limit of CI for TPR values}
+}}
 }
 \description{
 Adds backtransformed tpr, fpr and optionally confidence intervals to df

@@ -12,12 +12,14 @@ combine_metrics(ll)
 
 #' @return 
 a list with 3 elements:
-\item{tprm}{matrix of logit-transformed TPR values, one column for each 
+\itemize{
+  \item{tprm}{matrix of logit-transformed TPR values, one column for each 
 imputation}
-\item{fprm}{vector of logit-transformed FPR values passed on from `fpr_vals`, 
+  \item{fprm}{vector of logit-transformed FPR values passed on from `fpr_vals`, 
 one column for each imputation}
-\item{vartprm}{matrix of logit-transformed variance for TPR, one column for 
-each imputation}}
+  \item{vartprm}{matrix of logit-transformed variance for TPR, one column for 
+each imputation}
+}}
 }
 \description{
 Transforms a list of lists to a list of three matrices

@@ -12,7 +12,8 @@ pool_roc_rr(
   fpr_vals = seq(from = 0.001, to = 0.999, by = 0.001),
   backtransform = FALSE,
   ci.level = NULL,
-  tol = 0.001
+  tol = 0.001,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -22,7 +23,7 @@ pool_roc_rr(
 in each data.frame in data}
 
 \item{target}{The name of the target variable present in each 
-data.frame (must be binary).}
+data.frame  in data (must be binary).}
 
 \item{unique_vals}{Optional. Define the unique values that should be used as 
 cutoffs for the score variable. If not supplied, every unique cutoff is used.}
@@ -37,6 +38,9 @@ desired (or you are going to bootstrap confidence intervals).}
 
 \item{tol}{tolerance to use for 0 and 1 values (due to logit trans). 1e-3 
 by default. `FALSE` if no tolerance should be used instead for 0 values.}
+
+\item{verbose}{TRUE/FALSE, should information be printed to the screen while 
+the algorithm is running?}
 }
 \value{
 a data.frame with the elements:

@@ -15,11 +15,13 @@ add_ci(df, ci.level, target)
 
 #' @return 
 a data.frame with the elements:
-\item{tpr}{logit-transformed TPR values}
-\item{fpr}{logit-transformed FPR values}
-\item{var_tpr}{logit-transformed variance for TPR}
-\item{ll_tpr}{lower limit of CI for logit-transformed TPR values}
-\item{ul_tpr}{upper limit of CI for logit-transformed TPR values}}
+\itemize{
+  \item{tpr}{logit-transformed TPR values}
+  \item{fpr}{logit-transformed FPR values}
+  \item{var_tpr}{logit-transformed variance for TPR}
+  \item{ll_tpr}{lower limit of CI for logit-transformed TPR values}
+  \item{ul_tpr}{upper limit of CI for logit-transformed TPR values}
+}}
 }
 \description{
 Adds lower and upper bounds of Confidence Interval to df

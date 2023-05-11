@@ -11,7 +11,7 @@
 #' @param score Character, the name of the score variable that should be present 
 #' in each data.frame in data
 #' @param target The name of the target variable present in each 
-#' data.frame (must be binary).
+#' data.frame  in data (must be binary).
 #' @param unique_vals Optional. Define the unique values that should be used as 
 #' cutoffs for the score variable. If not supplied, every unique cutoff is used. 
 #' @param fpr_vals The FPR values over which to pool the TPR values. Defaults 
@@ -21,6 +21,8 @@
 #' desired (or you are going to bootstrap confidence intervals).
 #' @param tol tolerance to use for 0 and 1 values (due to logit trans). 1e-3 
 #' by default. `FALSE` if no tolerance should be used instead for 0 values.
+#' @param verbose TRUE/FALSE, should information be printed to the screen while 
+#' the algorithm is running?
 #'  
 #'  
 #' @return 
@@ -43,7 +45,8 @@ pool_roc_rr <- function(
     fpr_vals = seq(from=0.001, to=0.999, by=0.001),
     backtransform = FALSE,
     ci.level = NULL,
-    tol = 0.001
+    tol = 0.001,
+    verbose = TRUE
 ) {
   
   #if (length(target) == 1) {
@@ -56,16 +59,25 @@ pool_roc_rr <- function(
   
   # Loop over imputations
   cs <- list()
+  if(verbose) {
+    print("Calculating TPR for every FPR: \n")
+    pb <- txtProgressBar(min = 0, max = length(data), initial = 0) 
+  }
   for (i in 1:length(data)) {
+    
     r <- data[[i]][[target]] 
     nit_vals <- data[[i]][[score]]
     m <- apply_cut_off(nit_vals, unique_vals)
-    print(paste0("Dataset ", i))
+    
     cs[[i]] <- apply_metrics(m, r) |> 
       interpol(fpr_vals) |>
       add_var_roc(r) |>
       transform_metrics()
+    
+    if (verbose) setTxtProgressBar(pb,i)
   }
+  
+  if (verbose) print("Combining and pooling results.\n")
   
   # Combine and pool
   l <- combine_metrics(cs) |> pool_metrics()
@@ -164,15 +176,19 @@ add_var_roc <- function(df, r) {
 }
 
 
+#' transform metrics
+#' 
 #' @param l list containing 4 elements: a vector of `tpr`, a vector of `fpr` and 
 #' the respective variances. The length of each vector is the number of 
 #' distinct cutoffs (`unique_vals - 1`)
 #' 
 #' #' @return 
 #' a list with 3 elements:
-#' \item{tpri}{logit-transformed TPR values}
-#' \item{fpri}{logit-transformed original FPR values}
-#' \item{vartpri}{logit-transformed variance for TPR}
+#' \itemize{
+#'   \item{tpri}{logit-transformed TPR values}
+#'   \item{fpri}{logit-transformed original FPR values}
+#'   \item{vartpri}{logit-transformed variance for TPR}
+#' }
 #' 
 #' @keywords Internal
 transform_metrics <- function(l) {
@@ -192,12 +208,14 @@ transform_metrics <- function(l) {
 #' 
 #' #' @return 
 #' a list with 3 elements:
-#' \item{tprm}{matrix of logit-transformed TPR values, one column for each 
+#' \itemize{
+#'   \item{tprm}{matrix of logit-transformed TPR values, one column for each 
 #' imputation}
-#' \item{fprm}{vector of logit-transformed FPR values passed on from `fpr_vals`, 
+#'   \item{fprm}{vector of logit-transformed FPR values passed on from `fpr_vals`, 
 #' one column for each imputation}
-#' \item{vartprm}{matrix of logit-transformed variance for TPR, one column for 
+#'   \item{vartprm}{matrix of logit-transformed variance for TPR, one column for 
 #' each imputation}
+#' }
 #' 
 #' @keywords Internal
 combine_metrics <- function(ll) {
@@ -219,10 +237,13 @@ combine_metrics <- function(ll) {
 }
 
 
+#' Pool metrics
+#' 
 #' @param l list containing: (1) tprm, a matrix of tpr by imp, (2) fprm, a 
 #' vector of fpr and (3) varrocm, matrix of the variance of tpr
 #' 
 #' @keywords Internal
+#' @noRd
 pool_metrics <- function(l) {
   
   tprm <- pool_rr_m(l$tprm, l$varrocm)
@@ -264,15 +285,17 @@ get_unique_vals <- function(data, score, digits = 3) {
 #' 
 #' #' @return 
 #' a data.frame with the elements:
-#' \item{tpr_logit}{logit-transformed TPR values}
-#' \item{fpr_logit}{logit-transformed FPR values}
-#' \item{var_tpr_logit}{logit-transformed variance for TPR}
-#' \item{tpr}{TPR}
-#' \item{fpr}{FPR}
-#' \item{ll_tpr_logit}{lower limit of CI for logit-transformed TPR values}
-#' \item{ul_tpr_logit}{upper limit of CI for logit-transformed TPR values}
-#' \item{ll_tpr}{lower limit of CI for TPR values}
-#' \item{ul_tpr}{upper limit of CI for TPR values}
+#' \itemize{
+#'   \item{tpr_logit}{logit-transformed TPR values}
+#'   \item{fpr_logit}{logit-transformed FPR values}
+#'   \item{var_tpr_logit}{logit-transformed variance for TPR}
+#'   \item{tpr}{TPR}
+#'   \item{fpr}{FPR}
+#'   \item{ll_tpr_logit}{lower limit of CI for logit-transformed TPR values}
+#'   \item{ul_tpr_logit}{upper limit of CI for logit-transformed TPR values}
+#'   \item{ll_tpr}{lower limit of CI for TPR values}
+#'   \item{ul_tpr}{upper limit of CI for TPR values}
+#' }
 #' 
 #' @keywords Internal
 backtransform_df <- function(df, ci) {
@@ -297,12 +320,13 @@ backtransform_df <- function(df, ci) {
 #' 
 #' #' @return 
 #' a data.frame with the elements:
-#' \item{tpr}{logit-transformed TPR values}
-#' \item{fpr}{logit-transformed FPR values}
-#' \item{var_tpr}{logit-transformed variance for TPR}
-#' \item{ll_tpr}{lower limit of CI for logit-transformed TPR values}
-#' \item{ul_tpr}{upper limit of CI for logit-transformed TPR values}
-#' 
+#' \itemize{
+#'   \item{tpr}{logit-transformed TPR values}
+#'   \item{fpr}{logit-transformed FPR values}
+#'   \item{var_tpr}{logit-transformed variance for TPR}
+#'   \item{ll_tpr}{lower limit of CI for logit-transformed TPR values}
+#'   \item{ul_tpr}{upper limit of CI for logit-transformed TPR values}
+#' }
 #' @keywords Internal
 add_ci <- function(df, ci.level, target) {
   
