@@ -10,6 +10,17 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// delongPlacementsCpp
+List delongPlacementsCpp(List roc);
+RcppExport SEXP _rocmice_delongPlacementsCpp(SEXP rocSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type roc(rocSEXP);
+    rcpp_result_gen = Rcpp::wrap(delongPlacementsCpp(roc));
+    return rcpp_result_gen;
+END_RCPP
+}
 // tpr
 double tpr(IntegerVector r, IntegerVector p, double corr);
 RcppExport SEXP _rocmice_tpr(SEXP rSEXP, SEXP pSEXP, SEXP corrSEXP) {
@@ -156,6 +167,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rocmice_delongPlacementsCpp", (DL_FUNC) &_rocmice_delongPlacementsCpp, 1},
     {"_rocmice_tpr", (DL_FUNC) &_rocmice_tpr, 3},
     {"_rocmice_fpr", (DL_FUNC) &_rocmice_fpr, 3},
     {"_rocmice_var_prop", (DL_FUNC) &_rocmice_var_prop, 2},

@@ -1,9 +1,10 @@
 useDynLib(rocmice, .registration=TRUE)
 export("pool_roc_rr")
+export("mi_roc_test")
 
 importFrom(Rcpp, evalCpp)
 
-importFrom("stats", "qt")
+importFrom("stats", "qt", "pnorm", "pt", "var")
 import("dplyr")
 importFrom("tidyr", "fill")
 importFrom("utils", "setTxtProgressBar", "txtProgressBar")
