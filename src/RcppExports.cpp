@@ -21,8 +21,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// varproplogit
+double varproplogit(double events, double n, double corr);
+RcppExport SEXP _rocmice_varproplogit(SEXP eventsSEXP, SEXP nSEXP, SEXP corrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type events(eventsSEXP);
+    Rcpp::traits::input_parameter< double >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
+    rcpp_result_gen = Rcpp::wrap(varproplogit(events, n, corr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// logittrans
+double logittrans(double x);
+RcppExport SEXP _rocmice_logittrans(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(logittrans(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // tpr
-double tpr(IntegerVector r, IntegerVector p, double corr);
+NumericVector tpr(IntegerVector r, IntegerVector p, double corr);
 RcppExport SEXP _rocmice_tpr(SEXP rSEXP, SEXP pSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -35,7 +59,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fpr
-double fpr(IntegerVector r, IntegerVector p, double corr);
+NumericVector fpr(IntegerVector r, IntegerVector p, double corr);
 RcppExport SEXP _rocmice_fpr(SEXP rSEXP, SEXP pSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -168,6 +192,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rocmice_delongPlacementsCpp", (DL_FUNC) &_rocmice_delongPlacementsCpp, 1},
+    {"_rocmice_varproplogit", (DL_FUNC) &_rocmice_varproplogit, 3},
+    {"_rocmice_logittrans", (DL_FUNC) &_rocmice_logittrans, 1},
     {"_rocmice_tpr", (DL_FUNC) &_rocmice_tpr, 3},
     {"_rocmice_fpr", (DL_FUNC) &_rocmice_fpr, 3},
     {"_rocmice_var_prop", (DL_FUNC) &_rocmice_var_prop, 2},

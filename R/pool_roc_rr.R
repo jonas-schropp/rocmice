@@ -56,35 +56,39 @@ pool_roc_rr <- function(
   #} 
   
   if (is.null(unique_vals)) unique_vals <- get_unique_vals(data, score)
+  fpr_vals <- qlogis(fpr_vals)
+  
   
   # Loop over imputations
   cs <- list()
   if(verbose) {
-    print("Calculating TPR for every FPR: \n")
+    cat("\nCalculating TPR for every FPR: \n")
     pb <- txtProgressBar(min = 0, max = length(data), initial = 0) 
   }
+  
   for (i in 1:length(data)) {
     
     r <- data[[i]][[target]] 
-    nit_vals <- data[[i]][[score]]
-    m <- apply_cut_off(nit_vals, unique_vals)
+    p <- data[[i]][[score]]
+    m <- apply_cut_off(p, unique_vals)
+    zero <- qlogis(corr / (sum(r == 1) + 2*corr))
     
     cs[[i]] <- apply_metrics(m, r, corr) |> 
-      interpol(fpr_vals) |>
-      add_var_roc(r) |>
-      transform_metrics()
+      interpol(fpr_vals, zero) #|>
+      #add_var_roc(r, p, corr) |>
+      #transform_metrics()
     
     if (verbose) setTxtProgressBar(pb,i)
   }
   
-  if (verbose) print("Combining and pooling results.\n")
+  if (verbose) cat("\nCombining and pooling results.\n")
   
   # Combine and pool
   l <- combine_metrics(cs) |> pool_metrics()
   
   #l$var_roc[is.infinite(l$var_roc)] <- tol
-  #l$roc[is.infinite(l$roc) & l$roc < 0] <- logit(tol)
-  #l$roc[is.infinite(l$roc) & l$roc > 0] <- logit(1-tol)
+  #l$roc[is.infinite(l$roc) & l$roc < 0] <- qlogis(tol)
+  #l$roc[is.infinite(l$roc) & l$roc > 0] <- qlogis(1-tol)
   
   if (!is.null(ci.level)) l <- add_ci(l, ci.level, target = r)
   
@@ -100,13 +104,6 @@ pool_roc_rr <- function(
 }
 
 
-
-#' Logit Transformation
-#' @param mu value to transform
-#' @importFrom stats make.link
-#' 
-#' @keywords Internal
-logit <- make.link("logit")$linkfun
 
 #' Logit Transformation inv
 #' @param eta value to transform
@@ -127,6 +124,7 @@ invlogit <- make.link("logit")$linkinv
 #' @param l a list with 3 elements: `tpri`, `fpri`, `vartpri` as returned by 
 #' `apply_metrics`
 #' @param fpr_vals the FPR values to interpolate for 
+#' @param zero value to use for 0 cells
 #' 
 #' @return 
 #' a data.frame with 3 elements:
@@ -137,16 +135,16 @@ invlogit <- make.link("logit")$linkinv
 #' @import dplyr
 #' @importFrom tidyr fill
 #' @keywords Internal
-interpol <- function(l, fpr_vals) {
+interpol <- function(l, fpr_vals, zero) {
   
   # For CMD checks, try to remove dependencies
-  tpri = NULL; vartpri = NULL; fpri = NULL
+  tpri = NULL; fpri = NULL; vartpri = NULL; varfpri = NULL
   
   res <- data.frame(fpri = fpr_vals) %>%
     full_join(as.data.frame(l), by = "fpri") %>%
     arrange(fpri, tpri) %>%
-    fill(tpri, vartpri, .direction = "down") %>% 
-    mutate(tpri = ifelse(is.na(tpri), 0, tpri)) %>%
+    fill(tpri, vartpri, varfpri, .direction = "down") %>% 
+    mutate(tpri = ifelse(is.na(tpri), zero, tpri)) %>%
     distinct() %>%
     filter(fpri %in% fpr_vals) %>%
     group_by(fpri) %>%
@@ -164,13 +162,25 @@ interpol <- function(l, fpr_vals) {
 #' 
 #' @param df data.frame with tpr, fpr, vartpr
 #' @param r response vector
+#' @param p prediction vector
+#' @param corr continuity correction
 #' 
 #' @keywords Internal
-add_var_roc <- function(df, r) {
+add_var_roc <- function(df, r, p, corr) {
   
-  neg <- sum(r == 0)
+  neg <- sum(r == 0) + 2*corr
+  pos <- sum(r == 1) + 2*corr
   
-  df$varroci <- df$vartpri + var_prop(df$fpri, neg)
+  # new
+  #eneg <- sum(r == 0 & p == 1) + corr
+  #epos <- sum(r == 1 & p == 1) + corr
+  
+  #vartpri <- varlogit2(df$tpri, pos)
+  #varfpri <- varlogit2(df$fpri, neg)
+  
+  vartpri <- var_prop(df$tpri, pos)
+  varfpri <- var_prop(df$fpri, neg)
+  df$varroci <- vartpri + varfpri
  
   df 
 }
@@ -193,10 +203,10 @@ add_var_roc <- function(df, r) {
 #' @keywords Internal
 transform_metrics <- function(l) {
   
-  l$vartpri <- varlogit(l$vartpri, l$tpri)
+  # removed new
   l$varroci <- varlogit(l$varroci, l$tpri)
-  l$tpri <- logit(l$tpri)
-  l$fpri <- logit(l$fpri)
+  l$tpri <- qlogis(l$tpri)
+  l$fpri <- qlogis(l$fpri)
   
   l
 }
@@ -225,7 +235,8 @@ combine_metrics <- function(ll) {
   
   for (i in 1:length(ll)) {
     tprm[,i] <- ll[[i]]$tpri
-    varrocm[,i] <- ll[[i]]$varroci
+    varrocm[,i] <- ll[[i]]$vartpri
+    #varfprm[,i] <- ll[[i]]$varfpri
   }
   
   return(list(
@@ -314,7 +325,12 @@ backtransform_df <- function(df, ci) {
 
 #' Adds lower and upper bounds of Confidence Interval to df
 #' 
-#' @param df data.frame containing tpr, fpr and their variances
+#' @param df data.frame containing:
+#' \itemize{
+#'   \item{tpr}{logit-transformed TPR values}
+#'   \item{fpr}{logit-transformed FPR values}
+#'   \item{var_tpr}{logit-transformed variance for TPR}
+#' }
 #' @param ci.level double between 0-1. 
 #' @param target outcome vector
 #' 
@@ -334,14 +350,17 @@ add_ci <- function(df, ci.level, target) {
   
   t <- qt(alpha, length(target) - 1)
   
-  df$ll_roc <- df$roc - (t * (df$var_roc^2))
-  df$ul_roc <- df$roc + (t * (df$var_roc^2))
-  
-  df$ll_roc[is.nan(df$ll_roc)] <- Inf
-  df$ul_roc[is.nan(df$ul_roc)] <- -Inf
+  df$ll_roc <- df$roc - (t * sqrt(df$var_roc))
+  df$ul_roc <- df$roc + (t * sqrt(df$var_roc))
   
   df
   
 }
+
+
+
+
+
+
 
 

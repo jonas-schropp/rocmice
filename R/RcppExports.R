@@ -5,6 +5,20 @@ delongPlacementsCpp <- function(roc) {
     .Call(`_rocmice_delongPlacementsCpp`, roc)
 }
 
+#' Variance for a logit-transformed proportion
+#' @param r response vector, 0 / 1
+#' @param p prediction vector, 0 / 1
+#' @param corr continuity correction
+#' 
+#' @keywords Internal
+varproplogit <- function(events, n, corr) {
+    .Call(`_rocmice_varproplogit`, events, n, corr)
+}
+
+logittrans <- function(x) {
+    .Call(`_rocmice_logittrans`, x)
+}
+
 #' TPR
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
@@ -17,6 +31,7 @@ tpr <- function(r, p, corr) {
 #' FPR
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
+#' @param corr continuity correction
 #' 
 #' @keywords Internal
 fpr <- function(r, p, corr) {
@@ -99,7 +114,7 @@ rcpp_rowMeans <- function(x) {
 }
 
 #' Equivalent to R var
-#' @param samples a vector
+#' @param samples NumericVector
 #' @keywords Internal
 rcpp_var <- function(samples) {
     .Call(`_rocmice_rcpp_var`, samples)

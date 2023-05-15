@@ -1,13 +1,40 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+
+//' Variance for a logit-transformed proportion
+//' @param r response vector, 0 / 1
+//' @param p prediction vector, 0 / 1
+//' @param corr continuity correction
+//' 
+//' @keywords Internal
+// [[Rcpp::export]]
+double varproplogit(double events, double n, double corr) {
+
+  double res = 1 / (events + corr) + 1 / ((n - events + corr));
+  return res;
+
+}
+
+
+// [[Rcpp::export]]
+double logittrans(double x) {
+
+  double res = std::log(x / (1 - x));
+  return res;
+
+}
+
+
 //' TPR
 //' @param r response vector, 0 / 1
 //' @param p prediction vector, 0 / 1
 //' 
 //' @keywords Internal
 // [[Rcpp::export]]
-double tpr(IntegerVector r, IntegerVector p, double corr) {
+NumericVector tpr(IntegerVector r, IntegerVector p, double corr) {
+
+  NumericVector res(2);
   int n = r.size();
   int num_positives = 0.0;
   int true_positives = 0.0;
@@ -20,17 +47,24 @@ double tpr(IntegerVector r, IntegerVector p, double corr) {
       num_positives++;
     }
   }
+  
+  double TPR = (true_positives + corr) / (num_positives + 2*corr);
+  res[0] = logittrans(TPR);
+  res[1] = varproplogit(true_positives, num_positives, corr);
 
-  return (double) (true_positives + corr) / (num_positives + 2*corr);
+  return res;
 }
 
 //' FPR
 //' @param r response vector, 0 / 1
 //' @param p prediction vector, 0 / 1
+//' @param corr continuity correction
 //' 
 //' @keywords Internal
 // [[Rcpp::export]]
-double fpr(IntegerVector r, IntegerVector p, double corr) {
+NumericVector fpr(IntegerVector r, IntegerVector p, double corr) {
+  
+  NumericVector res(2);
   int n = r.size();
   int num_negatives = 0.0;
   int false_positives = 0.0;
@@ -43,9 +77,18 @@ double fpr(IntegerVector r, IntegerVector p, double corr) {
       num_negatives++;
     }
   }
+  
+  double FPR = (false_positives + corr) / (num_negatives + 2*corr);
+  res[0] = logittrans(FPR);
+  res[1] = varproplogit(false_positives, num_negatives, corr);
 
-  return (double) (false_positives + corr) / (num_negatives + 2*corr);
+  return res;
 }
+
+
+
+
+
 
 //' Variance for a proportion
 //' @param est vector of tpr or fpr
@@ -95,7 +138,8 @@ NumericVector varlogit(NumericVector var, NumericVector est) {
     if (est[i] == 0) {
       res[i] = 1e-8;
     } else {
-      res[i] = sqrt(var[i] / (est[i] * (1 - est[i])));
+      res[i] = (1 / (est[i] * (1 - est[i]))) * (1 / (est[i] * (1 - est[i]))) * var[i];
+      //res[i] = var[i] / (est[i] * (1 - est[i]));
     }
   }
 
@@ -159,25 +203,30 @@ int count_vals(IntegerVector x, int val) {
 //'
 // [[Rcpp::export]]
 List apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr) {
+
   int len = m.ncol();
   NumericVector tpri(len);
   NumericVector fpri(len);
   NumericVector vartpri(len);
+  NumericVector varfpri(len);
   
-  int pos = count_vals(r, 1);
+  //int pos = count_vals(r, 1);
   
   for (int i = 0; i < len; i++) {
     IntegerVector col = m(_, i);
-    tpri[i] = tpr(r, col, corr);
-    fpri[i] = fpr(r, col, corr);
+    NumericVector tmp0 = tpr(r, col, corr);
+    NumericVector tmp1 = fpr(r, col, corr);
+    tpri[i] = tmp0[0];
+    fpri[i] = tmp1[0];
+    vartpri[i] = tmp0[1];
+    varfpri[i] = tmp1[1];
   }
-  
-  vartpri = var_prop(tpri, pos);
   
   return List::create(
     Named("tpri") = tpri,
     Named("fpri") = fpri,
-    Named("vartpri") = vartpri
+    Named("vartpri") = vartpri,
+    Named("varfpri") = varfpri
   );
 }
 
@@ -202,7 +251,7 @@ NumericVector rcpp_rowMeans(NumericMatrix x) {
 
 
 //' Equivalent to R var
-//' @param samples a vector
+//' @param samples NumericVector
 //' @keywords Internal
 // [[Rcpp::export]]
 double rcpp_var(NumericVector samples)
@@ -273,3 +322,6 @@ List pool_rr_m (NumericMatrix est, NumericMatrix var) {
   );
 
 }
+
+
+
