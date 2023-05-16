@@ -4,12 +4,16 @@
 \alias{add_var_roc}
 \title{Adds roc variance to df following the formula in Martinez}
 \usage{
-add_var_roc(df, r)
+add_var_roc(df, r, p, corr)
 }
 \arguments{
 \item{df}{data.frame with tpr, fpr, vartpr}
 
 \item{r}{response vector}
+
+\item{p}{prediction vector}
+
+\item{corr}{continuity correction}
 }
 \description{
 varroc = vartpr + varfpr

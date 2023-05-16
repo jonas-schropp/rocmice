@@ -7,7 +7,12 @@
 add_ci(df, ci.level, target)
 }
 \arguments{
-\item{df}{data.frame containing tpr, fpr and their variances}
+\item{df}{data.frame containing:
+\itemize{
+  \item{tpr}{logit-transformed TPR values}
+  \item{fpr}{logit-transformed FPR values}
+  \item{var_tpr}{logit-transformed variance for TPR}
+}}
 
 \item{ci.level}{double between 0-1.}
 

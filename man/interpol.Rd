@@ -4,13 +4,15 @@
 \alias{interpol}
 \title{Interpolate values for tpri}
 \usage{
-interpol(l, fpr_vals)
+interpol(l, fpr_vals, zero)
 }
 \arguments{
 \item{l}{a list with 3 elements: `tpri`, `fpri`, `vartpri` as returned by 
 `apply_metrics`}
 
 \item{fpr_vals}{the FPR values to interpolate for}
+
+\item{zero}{value to use for 0 cells}
 }
 \value{
 a data.frame with 3 elements:

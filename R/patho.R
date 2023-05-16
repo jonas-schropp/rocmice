@@ -1,0 +1,49 @@
+#' Simulated data for illustration
+#'
+#' A list containing an especially pathological data set with missing data 
+#' following MAR. Data was created from a multivariate normal. Notably, the 
+#' true data generating process for the variable `outcome` is different 
+#' depending on the groups defined in `X4`. At the same time `X4` also 
+#' influences how missing values are generated - the proportion of missing 
+#' values is different between the groups. 
+#' This is a relatively realistic scenario: biomarkers for a disease could 
+#' for example show somewhat different associations to disease status in men 
+#' and women. Men might visit the hospital at a later stage of the disease and 
+#' therefore early screening tests are less likely to be available. 
+#' 
+#'
+#'@name patho
+#' @title patho
+#' @docType data
+#' @format A list containing three data sets:
+#' \describe{
+#'   \item{patho_complete}{The complete `data.frame` without missing values}
+#'   \item{patho_amp}{The `data.frame` with missing values}
+#'   \item{patho_imp}{A list of 5 `data.frames` following multiple imputation}
+#'}
+#'
+#' Each `data.frame` in `patho` consists of 12 variables:
+#' \describe{
+#'   \item{X1}{double, part of data generating process for `outcome`}
+#'   \item{X2}{double, part of data generating process for `outcome`}
+#'   \item{X3}{double, part of data generating process for `outcome`}
+#'   \item{X4}{binary, defining two groups, part of data generating process for `outcome`}
+#'   \item{X5}{double, nuisance variable}
+#'   \item{X6}{double, nuisance variable}
+#'   \item{X7}{double, nuisance variable}
+#'   \item{X8}{double, nuisance variable}
+#'   \item{X9}{double, nuisance variable}
+#'   \item{X10}{double, nuisance variable}
+#'   \item{outcome}{binary, defining two groups. The condition of interest}
+#'   \item{score}{A non-invasive test / score / prediction algorithm used to predict `outcome`}
+#'}
+#'
+#'
+#' @source simulated using `MASS` and `mice`.
+#'
+#' @details
+#' 
+#'
+#' @keywords data
+#' @usage data(patho)
+"patho"
