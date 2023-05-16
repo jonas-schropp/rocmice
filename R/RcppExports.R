@@ -6,8 +6,8 @@ delongPlacementsCpp <- function(roc) {
 }
 
 #' Variance for a logit-transformed proportion
-#' @param r response vector, 0 / 1
-#' @param p prediction vector, 0 / 1
+#' @param events double, number of events
+#' @param n double, number of trials
 #' @param corr continuity correction
 #' 
 #' @keywords Internal

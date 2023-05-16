@@ -42,10 +42,9 @@ help("patho")
 ```
 
 
-```{r}
+```{r include = FALSE}
 library(plotROC)
 library(ggplot2)
-library(ggpubr)
 ```
 
 ## Plotting the ROC curve

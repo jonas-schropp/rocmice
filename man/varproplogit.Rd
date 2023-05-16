@@ -7,11 +7,11 @@
 varproplogit(events, n, corr)
 }
 \arguments{
+\item{events}{double, number of events}
+
+\item{n}{double, number of trials}
+
 \item{corr}{continuity correction}
-
-\item{r}{response vector, 0 / 1}
-
-\item{p}{prediction vector, 0 / 1}
 }
 \description{
 Variance for a logit-transformed proportion

@@ -2,3 +2,5 @@
 ^\.Rproj\.user$
 ^.*\.Rmd$
 ^.*\.md$
+data-raw
+Readme_files

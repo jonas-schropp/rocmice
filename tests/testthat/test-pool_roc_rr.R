@@ -2,11 +2,11 @@ r <- c(1, 0, 1, 0, 1, 0, 0, 1)
 p <- c(1, 0, 1, 1, 0, 1, 0, 1)
 
 test_that("tpr works", {
-  expect_equal(tpr(r, p, 0), 3/4)
+  expect_equal(tpr(r, p, 0)[1], logittrans(3/4))
 })
 
 test_that("fpr works", {
-  expect_equal(fpr(r, p, 0), 2/4)
+  expect_equal(fpr(r, p, 0)[1], logittrans(2/4))
 })
 
 
@@ -39,9 +39,11 @@ test_that("apply_cut_off works", {
 
 r <- c(1, 0, 1, 0, 1)
 l <- list(
-  tpri = c(2/3, 2/3, 1/3),
-  fpri = c(1, 1/2, 1/2),
-  vartpri = c(0.074, 0.074, 0.074)
+  tpri = c(0, 0.6931472, 0),
+  fpri = c(Inf, 0, 0.6931472),
+  vartpri = c(1, 1.5000000, 2),
+  varfpri = c(Inf, 2, 1.5000000)
+  
 )
 test_that("apply_metrics works", {
   expect_equal(apply_metrics(m, r, 0), l, tolerance = 3)

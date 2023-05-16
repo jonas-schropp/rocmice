@@ -1,7 +1,11 @@
-set.seed(101)
+library(MASS)
+library(mice)
 
 
-# simulate from multivariate normal
+set.seed(101) 
+
+# SIMULATION -------------------------------------------------------------------
+
 n <- 300
 mu <- rep(0, 10)
 Sigma <- matrix(0.6, nrow=10, ncol=10)
@@ -15,7 +19,6 @@ eta <- 0.6 * df_complete[[1]] +
   df_complete[[2]] + 
   1.3 * df_complete[[3]] + 
   -3 * df_complete[[4]] + 
-  #3 * df_complete[[5]] + 
   -2 * df_complete[[3]] * df_complete[[4]] +
   -2 * df_complete[[2]] * df_complete[[4]] +
   rnorm(300, 0, 0.5)
@@ -23,11 +26,7 @@ eta <- 0.6 * df_complete[[1]] +
 outcome <- rbinom(300, 1, rocmice:::invlogit(eta))
 
 
-amp0 <- ampute(
-  data = df_complete,
-  prop = 0.8,
-  mech = "MAR"
-)
+# AMPUTATION -------------------------------------------------------------------
 
 patterns <- matrix(1, 4, 11)
 colnames(patterns) <- c(paste0("X", 1:10), "outcome")
@@ -47,12 +46,12 @@ df_miss <- ampute(
   mech = "MAR"
 )$amp
 
+# IMPUTATION -------------------------------------------------------------------
 
 imp <- mice(df_miss, 5)
 df_imp <- complete(imp, "all")
 
-
-df_complete$outcome <- outcome
+# ADD THE SCORE ----------------------------------------------------------------
 
 calc_score <- function(x1, x2, x3) {
   eta <- 0.5 * x1 + x2 + 1.5 * x3
@@ -74,14 +73,11 @@ for (i in 1:length(df_imp)) {
   )
 }
 
+# PUT TOGETHER AND SAVE --------------------------------------------------------
 
-patho <- list(
-  df_complete, df_miss, df_imp
-)
+patho <- list(df_complete, df_miss, df_imp)
 
 names(patho) <- c("patho_complete", "patho_amp", "patho_imp")
-
-#readr::write_rds(patho, here::here("data", "patho.rds"))
 
 usethis::use_data(
   patho,

@@ -74,9 +74,7 @@ pool_roc_rr <- function(
     zero <- qlogis(corr / (sum(r == 1) + 2*corr))
     
     cs[[i]] <- apply_metrics(m, r, corr) |> 
-      interpol(fpr_vals, zero) #|>
-      #add_var_roc(r, p, corr) |>
-      #transform_metrics()
+      interpol(fpr_vals, zero)
     
     if (verbose) setTxtProgressBar(pb,i)
   }
@@ -85,10 +83,6 @@ pool_roc_rr <- function(
   
   # Combine and pool
   l <- combine_metrics(cs) |> pool_metrics()
-  
-  #l$var_roc[is.infinite(l$var_roc)] <- tol
-  #l$roc[is.infinite(l$roc) & l$roc < 0] <- qlogis(tol)
-  #l$roc[is.infinite(l$roc) & l$roc > 0] <- qlogis(1-tol)
   
   if (!is.null(ci.level)) l <- add_ci(l, ci.level, target = r)
   

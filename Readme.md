@@ -41,17 +41,6 @@ help("patho")
     ## No documentation for 'patho' in specified packages and libraries:
     ## you could try '??patho'
 
-``` r
-library(plotROC)
-```
-
-    ## Loading required package: ggplot2
-
-``` r
-library(ggplot2)
-library(ggpubr)
-```
-
 ## Plotting the ROC curve
 
 First we pool the ROC for the imputed data sets using `pool_roc_rr`:
