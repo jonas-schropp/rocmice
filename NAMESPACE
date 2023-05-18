@@ -1,6 +1,7 @@
 useDynLib(rocmice, .registration=TRUE)
 export("pool_roc_rr")
 export("mi_roc_test")
+export("pool_auc_rr")
 
 importFrom(Rcpp, evalCpp)
 

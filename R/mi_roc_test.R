@@ -20,12 +20,11 @@ mi_roc_test <- function(rocs1, rocs2, paired = FALSE) {
   
   if (length(rocs1) != length(rocs2)) {
     stop("rocs1 and rocs2 must be the same length")
-    }
+  }
   
   if (paired) {
     mi_roc_test.paired(rocs1, rocs2)
-  }
-  else if (!paired) {
+  } else if (!paired) {
     mi_roc_test.unpaired(rocs1, rocs2)
   }
   
@@ -147,7 +146,7 @@ mi_roc_test.unpaired <- function(rocs1, rocs2) {
   res <- data.frame(
     delta_auc = thetadiff, 
     t.value = t, 
-    df = df.mod, 
+    #df = df.mod, 
     p.value = p,
     var.total = VTSR, 
     var.within = VWSR, 
@@ -289,7 +288,7 @@ mi_roc_test.paired <- function(rocs1, rocs2) {
   fmiSR <- (rivSR + 2 / (df.mod + 3)) / (rivSR + 1)
   
   # p.value
-  p <- pt(t, df.mod)
+  #p <- pt(t, df.mod)
   pval <- 2 * pnorm(-abs(zscore))
   
   #if(conf.level > 0) {
@@ -301,9 +300,9 @@ mi_roc_test.paired <- function(rocs1, rocs2) {
   
   res <- data.frame(
     delta_auc = thetadiff, 
-    t.value = t, 
-    df = df.mod, 
-    p.value.t = p,
+    Z = zscore, 
+    #df = df.mod, too high? why?
+    #p.value.t = p,
     p.value = pval,
     var.total = VTSR, 
     var.within = VWSR, 
@@ -342,4 +341,7 @@ delongPlacements <- function(roc) {
   return(placements)
   
 }
+
+
+
 
