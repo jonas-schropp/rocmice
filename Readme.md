@@ -43,7 +43,34 @@ help("patho")
 Notable, it contains a binary variable `outcome` that represents some
 kind of status, for example presence of a disease and a `score` that
 represents the result of some kind of predictive / diagnostic algorithm
-(it was calculated as `invlogit(0.5 * X1 + X2 + 1.5 * X3)`).
+(it was calculated as `invlogit(0.5 * X1 + X2 + 1.5 * X3)`). This score
+performs worse when `X4` is 1 then when it is 0.
+
+## Pooling the AUC
+
+We can calculate the AUC for each imputation using `pROC::roc`.
+
+``` r
+rocs <- list()
+for (i in 1:length(patho$patho_imp)) {
+  rocs[[i]] <- pROC::roc(
+    outcome ~ score, 
+    data = patho$patho_imp[[i]],
+    direction = ">", levels = c(0, 1)
+    )
+}
+```
+
+And then pool it with `pool_auc_rr`:
+
+``` r
+pool_auc_rr(rocs, ci.level = 0.95, transform = "logit")
+```
+
+    ##         auc        ll        ul auc_logit var_total_logit var_between_logit
+    ## 1 0.4749906 0.3933517 0.5579887 -0.100121      0.02749194       0.006515622
+    ##   var_within_logit
+    ## 1       0.01967319
 
 ## Plotting the ROC curve
 
@@ -107,7 +134,7 @@ ggplot() +
     )
 ```
 
-![](Readme_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](Readme_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 It is easy to see that the ROC created from multiply imputed data
 closely tracks the one on a complete data set without missing values,
@@ -144,8 +171,8 @@ each imputation using Rubin’s Rules.
 mi_roc_test(g1, g2, paired = FALSE)
 ```
 
-    ##    delta_auc   t.value       df      p.value  var.total var.within var.between
-    ## 1 -0.4382247 -4.662933 174.5373 6.173937e-06 0.09398048 0.09036396 0.003013763
+    ##    delta_auc   t.value      p.value  var.total var.within var.between
+    ## 1 -0.4382247 -4.662933 6.173937e-06 0.09398048 0.09036396 0.003013763
     ##          riv     lambda       fmi
     ## 1 0.04002165 0.03848156 0.0493133
 
@@ -167,10 +194,11 @@ pl2 <- ggplot(patho$patho_imp[[1]], aes(X4, fill = factor(outcome))) +
 ggpubr::ggarrange(pl1, pl2)
 ```
 
-![](Readme_files/figure-gfm/unnamed-chunk-9-1.png)<!-- --> It does
-appear like group 1 is also several times less likely to suffer from the
-outcome condition, so we could incorporate that information into a new
-score.
+![](Readme_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+It does appear like group 1 is also several times less likely to suffer
+from the outcome condition, so we could incorporate that information
+into a new score.
 
 ``` r
 calc_score2 <- function(d) {
@@ -205,7 +233,7 @@ for (i in 1:length(patho$patho_imp)) {
 mi_roc_test(g1, g2, paired = TRUE)
 ```
 
-    ##    delta_auc   t.value       df p.value.t   p.value.z    var.total   var.within
-    ## 1 -0.1204099 -252.7884 272.2623         0 3.44668e-08 0.0004763271 0.0004185918
-    ##    var.between       riv    lambda       fmi
-    ## 1 4.811273e-05 0.1379274 0.1212093 0.1275944
+    ##    delta_auc         Z     p.value    var.total   var.within  var.between
+    ## 1 -0.1204099 -5.517085 3.44668e-08 0.0004763271 0.0004185918 4.811273e-05
+    ##         riv    lambda       fmi
+    ## 1 0.1379274 0.1212093 0.1275944

@@ -1,11 +1,11 @@
 Package: rocmice
 Type: Package
 Title: ROC in the Presence of Missing Data
-Version: 0.0.8
+Version: 0.1.0
 Date: 2023-05-12
 Author: Jonas Schropp
 Maintainer: Jonas Schropp <jonas.schropp@protonmail.com>
-Description: One paragraph description of what the package does as one or more full sentences.
+Description: Pool AUC and ROC over multiple imputed data sets, compare paired and unpaired AUC after multiple imputation using Delong's test.
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.9), stats
 LinkingTo: Rcpp

@@ -80,7 +80,7 @@ pool_auc_se <- function (
 ) {
   
   if (transform == "logit") {
-    res <- pool_auc_log(AUC, SE, ci.level, m)
+    res <- pool_auc_logit(AUC, SE, ci.level, m)
   } else if (isFALSE(transform)) {
     res <- pool_auc_unt(AUC, SE, ci.level, m)
   } else {
@@ -105,7 +105,7 @@ pool_auc_se <- function (
 #' @keywords Internal
 #' @noRd
 #' 
-pool_auc_log <- function(AUC, SE, ci.level, m) {
+pool_auc_logit <- function(AUC, SE, ci.level, m) {
   
   AUC_log <- qlogis(AUC)
   SE_log <- SE / (AUC * (1 - AUC)) # see miceafter::logit_trans
@@ -123,7 +123,9 @@ pool_auc_log <- function(AUC, SE, ci.level, m) {
     ll = ll, 
     ul = ul, 
     auc_logit = AUC_log, 
-    var_logit = sqrt(SET[1])
+    var_total_logit = SET[3],
+    var_between_logit = SET[4],
+    var_within_logit = SET[5]
   )
   
   return(res)
@@ -147,7 +149,9 @@ pool_auc_unt <- function(AUC, SE, ci.level, m) {
 
   res <- data.frame(
     auc = auc, ll = ll, ul = ul, 
-    var = sqrt(SET[1])
+    var_total = SET[3],
+    var_between = SET[4],
+    var_within = SET[5]
   )
   
   return(res)
@@ -177,7 +181,7 @@ rr_se <- function(est, SE, ci.level, m) {
   
   alpha <- 1 - (1 - ci.level) / 2
   t <- qt(alpha, v)  # t value 
-  res <- c(SET, t)
+  res <- c(SET, t, VT, VB, VW)
   
   return(res)
   
