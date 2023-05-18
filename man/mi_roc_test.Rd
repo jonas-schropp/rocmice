@@ -42,3 +42,4 @@ Paired version
 \author{
 Jonas Schropp, code fragments from `pROC::roc.test` and `MKmisc::mi.t.test`.
 }
+\keyword{Internal}

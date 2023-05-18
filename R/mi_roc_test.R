@@ -46,7 +46,7 @@ mi_roc_test <- function(rocs1, rocs2, paired = FALSE) {
 #' @importFrom stats pt
 #' @importFrom stats pnorm
 #' 
-#' @export
+#' @keywords Internal
 #' 
 mi_roc_test.unpaired <- function(rocs1, rocs2) {
   
@@ -177,7 +177,7 @@ mi_roc_test.unpaired <- function(rocs1, rocs2) {
 #' @importFrom stats var
 #' @importFrom stats pt
 #' 
-#' @export
+#' @keywords Internal
 #' 
 mi_roc_test.paired <- function(rocs1, rocs2) {
   
@@ -304,7 +304,7 @@ mi_roc_test.paired <- function(rocs1, rocs2) {
     t.value = t, 
     df = df.mod, 
     p.value.t = p,
-    p.value.z = pval,
+    p.value = pval,
     var.total = VTSR, 
     var.within = VWSR, 
     var.between = VBSR, 

@@ -38,12 +38,15 @@ test_that("apply_cut_off works", {
 
 
 r <- c(1, 0, 1, 0, 1)
-l <- list(
-  tpri = c(0, 0.6931472, 0),
-  fpri = c(Inf, 0, 0.6931472),
-  vartpri = c(1, 1.5000000, 2),
-  varfpri = c(Inf, 2, 1.5000000)
-  
+l <- matrix(
+  c(
+    qlogis(
+      c(1, 1/2, 1/2,
+        2/3, 2/3, 2/3)
+      ),
+    Inf, 2, 2,
+    1.5, 1.5, 1.5),
+  3, 4
 )
 test_that("apply_metrics works", {
   expect_equal(apply_metrics(m, r, 0), l, tolerance = 3)
@@ -84,3 +87,20 @@ test_that("rcpp_var works", {
 })
 
 
+test_that("filterArray works", {
+  x <- matrix(
+    data = c(
+      0, 1,
+      0, 2,
+      0, 1,
+      1, 2,
+      1, 1,
+      3, 1,
+      4, 0,
+      5, 5,
+      5, 2
+    ),
+    nrow=9, ncol=2, byrow = TRUE
+  )
+  expect_equal(filterArray(x), c(1, 0, 1, 0, 1, 0, 0, 0, 1))
+})

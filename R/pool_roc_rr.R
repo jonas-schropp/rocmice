@@ -45,7 +45,7 @@ pool_roc_rr <- function(
     fpr_vals = seq(from=0.001, to=0.999, by=0.001),
     backtransform = FALSE,
     ci.level = NULL,
-    corr = 0.1,
+    corr = 0.5,
     verbose = TRUE
 ) {
   
@@ -71,7 +71,15 @@ pool_roc_rr <- function(
     r <- data[[i]][[target]] 
     p <- data[[i]][[score]]
     m <- apply_cut_off(p, unique_vals)
-    zero <- qlogis(corr / (sum(r == 1) + 2*corr))
+    zero <- c(
+      tpr(r, rep(0, length(r)), corr), 
+      fpr(r, rep(0, length(r)), corr)[2]
+      )
+    one <- c(
+      fpr(r, rep(1, length(r)), corr)[1],
+      tpr(r, rep(1, length(r)), corr), 
+      fpr(r, rep(1, length(r)), corr)[2]
+    )
     
     cs[[i]] <- apply_metrics(m, r, corr) |> 
       interpol(fpr_vals, zero)
@@ -115,37 +123,27 @@ invlogit <- make.link("logit")$linkinv
 #' function does not use linear interpolation because we have enough values 
 #' for tpr available to simply use the values in the data.
 #' 
-#' @param l a list with 3 elements: `tpri`, `fpri`, `vartpri` as returned by 
-#' `apply_metrics`
+#' @param l a matrix with 4 columns: "fpri", "tpri", "varfpri", "vartpri" as 
+#' returned by `apply_metrics`
 #' @param fpr_vals the FPR values to interpolate for 
-#' @param zero value to use for 0 cells
+#' @param zero values to use for 0 cells
 #' 
 #' @return 
 #' a data.frame with 3 elements:
 #' \item{tpri}{logit-transformed TPR values}
 #' \item{fpri}{logit-transformed FPR values passed on from `fpr_vals`}
+#' \item{varfpri}{logit-transformed variance for FPR}
 #' \item{vartpri}{logit-transformed variance for TPR}
 #' 
-#' @import dplyr
-#' @importFrom tidyr fill
 #' @keywords Internal
 interpol <- function(l, fpr_vals, zero) {
   
-  # For CMD checks, try to remove dependencies
-  tpri = NULL; fpri = NULL; vartpri = NULL; varfpri = NULL
-  
-  res <- data.frame(fpri = fpr_vals) %>%
-    full_join(as.data.frame(l), by = "fpri") %>%
-    arrange(fpri, tpri) %>%
-    fill(tpri, vartpri, varfpri, .direction = "down") %>% 
-    mutate(tpri = ifelse(is.na(tpri), zero, tpri)) %>%
-    distinct() %>%
-    filter(fpri %in% fpr_vals) %>%
-    group_by(fpri) %>%
-    filter(tpri == max(tpri)) %>%
-    ungroup()
+  res <- full_join_rcpp(l, fpr_vals, zero)
+  res <- res[!filterArray(res),]
+  res <- res[res[,1] %in% fpr_vals,]
+  colnames(res) <- c("fpri", "tpri", "varfpri", "vartpri")
     
-  res
+  data.frame(res)
   
 }
 

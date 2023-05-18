@@ -7,17 +7,18 @@
 interpol(l, fpr_vals, zero)
 }
 \arguments{
-\item{l}{a list with 3 elements: `tpri`, `fpri`, `vartpri` as returned by 
-`apply_metrics`}
+\item{l}{a matrix with 4 columns: "fpri", "tpri", "varfpri", "vartpri" as 
+returned by `apply_metrics`}
 
 \item{fpr_vals}{the FPR values to interpolate for}
 
-\item{zero}{value to use for 0 cells}
+\item{zero}{values to use for 0 cells}
 }
 \value{
 a data.frame with 3 elements:
 \item{tpri}{logit-transformed TPR values}
 \item{fpri}{logit-transformed FPR values passed on from `fpr_vals`}
+\item{varfpri}{logit-transformed variance for FPR}
 \item{vartpri}{logit-transformed variance for TPR}
 }
 \description{

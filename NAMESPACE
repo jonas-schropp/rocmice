@@ -5,6 +5,4 @@ export("mi_roc_test")
 importFrom(Rcpp, evalCpp)
 
 importFrom("stats", "qt", "pnorm", "pt", "var", "qlogis")
-import("dplyr")
-importFrom("tidyr", "fill")
 importFrom("utils", "setTxtProgressBar", "txtProgressBar")

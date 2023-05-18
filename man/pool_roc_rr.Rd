@@ -12,7 +12,7 @@ pool_roc_rr(
   fpr_vals = seq(from = 0.001, to = 0.999, by = 0.001),
   backtransform = FALSE,
   ci.level = NULL,
-  corr = 0.1,
+  corr = 0.5,
   verbose = TRUE
 )
 }

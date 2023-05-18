@@ -132,7 +132,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // apply_metrics
-List apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr);
+NumericMatrix apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr);
 RcppExport SEXP _rocmice_apply_metrics(SEXP mSEXP, SEXP rSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -141,6 +141,65 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const IntegerVector& >::type r(rSEXP);
     Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
     rcpp_result_gen = Rcpp::wrap(apply_metrics(m, r, corr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// combineVecs
+std::vector<double> combineVecs(NumericVector A, NumericVector B);
+RcppExport SEXP _rocmice_combineVecs(SEXP ASEXP, SEXP BSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type A(ASEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type B(BSEXP);
+    rcpp_result_gen = Rcpp::wrap(combineVecs(A, B));
+    return rcpp_result_gen;
+END_RCPP
+}
+// getUniqueValues
+std::vector<double> getUniqueValues(std::vector<double> vec);
+RcppExport SEXP _rocmice_getUniqueValues(SEXP vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec(vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(getUniqueValues(vec));
+    return rcpp_result_gen;
+END_RCPP
+}
+// findIndex
+int findIndex(double value, const NumericVector vec);
+RcppExport SEXP _rocmice_findIndex(SEXP valueSEXP, SEXP vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< const NumericVector >::type vec(vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(findIndex(value, vec));
+    return rcpp_result_gen;
+END_RCPP
+}
+// full_join_rcpp
+NumericMatrix full_join_rcpp(NumericMatrix m, NumericVector fpri_vals, NumericVector zero);
+RcppExport SEXP _rocmice_full_join_rcpp(SEXP mSEXP, SEXP fpri_valsSEXP, SEXP zeroSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type fpri_vals(fpri_valsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type zero(zeroSEXP);
+    rcpp_result_gen = Rcpp::wrap(full_join_rcpp(m, fpri_vals, zero));
+    return rcpp_result_gen;
+END_RCPP
+}
+// filterArray
+IntegerVector filterArray(NumericMatrix mat);
+RcppExport SEXP _rocmice_filterArray(SEXP matSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type mat(matSEXP);
+    rcpp_result_gen = Rcpp::wrap(filterArray(mat));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -202,6 +261,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rocmice_apply_cut_off", (DL_FUNC) &_rocmice_apply_cut_off, 2},
     {"_rocmice_count_vals", (DL_FUNC) &_rocmice_count_vals, 2},
     {"_rocmice_apply_metrics", (DL_FUNC) &_rocmice_apply_metrics, 3},
+    {"_rocmice_combineVecs", (DL_FUNC) &_rocmice_combineVecs, 2},
+    {"_rocmice_getUniqueValues", (DL_FUNC) &_rocmice_getUniqueValues, 1},
+    {"_rocmice_findIndex", (DL_FUNC) &_rocmice_findIndex, 2},
+    {"_rocmice_full_join_rcpp", (DL_FUNC) &_rocmice_full_join_rcpp, 3},
+    {"_rocmice_filterArray", (DL_FUNC) &_rocmice_filterArray, 1},
     {"_rocmice_rcpp_rowMeans", (DL_FUNC) &_rocmice_rcpp_rowMeans, 1},
     {"_rocmice_rcpp_var", (DL_FUNC) &_rocmice_rcpp_var, 1},
     {"_rocmice_rowVars", (DL_FUNC) &_rocmice_rowVars, 1},

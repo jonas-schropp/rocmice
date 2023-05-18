@@ -135,12 +135,7 @@ NumericVector varlogit(NumericVector var, NumericVector est) {
   NumericVector res(len);
 
   for (int i = 0; i < len; i++) {
-    if (est[i] == 0) {
-      res[i] = 1e-8;
-    } else {
-      res[i] = (1 / (est[i] * (1 - est[i]))) * (1 / (est[i] * (1 - est[i]))) * var[i];
-      //res[i] = var[i] / (est[i] * (1 - est[i]));
-    }
+    res[i] = (1 / (est[i] * (1 - est[i]))) * (1 / (est[i] * (1 - est[i]))) * var[i];
   }
 
   return res;
@@ -202,7 +197,7 @@ int count_vals(IntegerVector x, int val) {
 //' @keywords Internal
 //'
 // [[Rcpp::export]]
-List apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr) {
+NumericMatrix apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr) {
 
   int len = m.ncol();
   NumericVector tpri(len);
@@ -222,13 +217,148 @@ List apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr) 
     varfpri[i] = tmp1[1];
   }
   
-  return List::create(
-    Named("tpri") = tpri,
-    Named("fpri") = fpri,
-    Named("vartpri") = vartpri,
-    Named("varfpri") = varfpri
-  );
+  NumericMatrix result(len, 4);
+  result(_, 0) = fpri;
+  result(_, 1) = tpri;
+  result(_, 2) = varfpri;
+  result(_, 3) = vartpri;
+
+  return result;
 }
+
+
+// Function to combine two NumericVectors
+// [[Rcpp::export]]
+std::vector<double> combineVecs(NumericVector A, NumericVector B) {
+  
+  std::vector<double> res(A.size() + B.size()); // preallocate memory
+  
+  res.insert( res.end(), A.begin(), A.end() );
+  res.insert( res.end(), B.begin(), B.end() );
+  
+  
+  return res;
+  
+}
+
+
+// Function to get unique values from two NumericVectors
+// [[Rcpp::export]]
+std::vector<double> getUniqueValues(std::vector<double> vec) {
+  
+  std::vector<double>::iterator ip;
+  int l = vec.size();
+  
+  // Using std::unique
+  ip = std::unique(vec.begin(), vec.begin() + l);
+  // * means undefined
+  
+  // Resizing the vector so as to remove the undefined terms
+  vec.resize(std::distance(vec.begin(), ip));
+  
+  return vec;
+}
+
+
+// Function to sort a NumericVector in ascending order
+//std::vector<double> sortVectorAscending(std::vector<double> vec) {
+  
+//  std::sort(vec.begin(), vec.end());
+  
+//  return vec;
+//}
+
+
+// Function to find the index of a double value in a NumericVector
+// Returns NA if the value is not found
+// [[Rcpp::export]]
+int findIndex(double value, const NumericVector vec) {
+  for (int i = 0; i < vec.size(); i++) {
+    if (vec[i] == value) {
+      return i;
+    } 
+  }
+  int x = -999;
+  return x;
+}
+
+
+// C++ function to create the matrix
+// [[Rcpp::export]]
+NumericMatrix full_join_rcpp(
+    NumericMatrix m, 
+    NumericVector fpri_vals, 
+    NumericVector zero
+) {
+  
+  // Get unique values of fpri_vals and fpri in m
+  std::vector<double> fpri_all = combineVecs(m(_,0), fpri_vals);
+  std::vector<double> fpri = getUniqueValues(fpri_all);
+  
+  NumericMatrix result_matrix(fpri.size(), 4);
+  
+  //std::vector<double> fpri_sorted = sortVectorAscending(fpri);
+  // Sort the vector in ascending order
+  std::sort(fpri.begin(), fpri.end());
+  
+  NumericVector fpriNV(fpri.begin(), fpri.end()); // Convert to NumericVector
+  result_matrix(_, 0) = fpriNV;
+
+  
+  // Filling columns 2, 3, and 4 with corresponding values
+  for (int i = 0; i < fpriNV.size(); i++) {
+    double fpr = result_matrix(i, 0);
+    int index = findIndex(fpr, m(_,0));
+    
+    if (index >= 0) {
+      result_matrix(i, 1) = m(index, 1);
+      result_matrix(i, 2) = m(index, 2);
+      result_matrix(i, 3) = m(index, 3);
+    } else if (index < 0 && i > 0) {
+      result_matrix(i, 1) = result_matrix(i-1, 1);
+      result_matrix(i, 2) = result_matrix(i-1, 2);
+      result_matrix(i, 3) = result_matrix(i-1, 3);
+    } else if (index < 0 && i == 0) {
+      result_matrix(i, 1) = zero[0];
+      result_matrix(i, 2) = zero[1];
+      result_matrix(i, 3) = zero[2];
+    }
+    
+  }
+  
+  return result_matrix;
+}
+
+
+// Function to remove duplicate values and retain only the max tpr for each fpr
+// [[Rcpp::export]]
+IntegerVector filterArray(NumericMatrix mat) {
+  
+  // Unfortunately have to clone to avoid side effects...
+  NumericMatrix m = clone(mat);
+  IntegerVector res(m.nrow());
+  
+  for (int i = 1; i < m.nrow(); i++) {
+
+    
+    if (m(i,0) != m(i-1,0)) {
+      continue;
+    } else if (m(i,0) == m(i-1,0)){
+      if (m(i,1) >= m(i-1,1)) {
+        res[i-1] = 1;
+      } else if (m(i,1) < m(i-1,1)) {
+        NumericVector tmp = m(i,_);
+        m(i,_) = m(i-1,_);
+        m(i-1,_) = tmp;
+        res[i] = 1;
+      } 
+    } 
+  }
+  
+  return res;
+  
+}
+
 
 
 //' Equivalent to R rowMeans

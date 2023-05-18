@@ -106,6 +106,26 @@ apply_metrics <- function(m, r, corr) {
     .Call(`_rocmice_apply_metrics`, m, r, corr)
 }
 
+combineVecs <- function(A, B) {
+    .Call(`_rocmice_combineVecs`, A, B)
+}
+
+getUniqueValues <- function(vec) {
+    .Call(`_rocmice_getUniqueValues`, vec)
+}
+
+findIndex <- function(value, vec) {
+    .Call(`_rocmice_findIndex`, value, vec)
+}
+
+full_join_rcpp <- function(m, fpri_vals, zero) {
+    .Call(`_rocmice_full_join_rcpp`, m, fpri_vals, zero)
+}
+
+filterArray <- function(mat) {
+    .Call(`_rocmice_filterArray`, mat)
+}
+
 #' Equivalent to R rowMeans
 #' @param x a matrix
 #' @keywords Internal
