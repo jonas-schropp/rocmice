@@ -2,6 +2,48 @@
 using namespace Rcpp;
 
 
+//' C++ implementation of R `order`
+//' Assuming we don't have any missing values, only one vector to order and 
+//' always want to order descending.
+//' @param x double vector to order
+//' @keywords Internal
+// [[Rcpp::export]]
+std::vector<int> order_descending(std::vector<double> x) {
+  int n = x.size();
+
+  // Create an index vector
+  std::vector<int> indices(n);
+  for (int i = 0; i < n; ++i) {
+    indices[i] = i;
+  }
+
+  // Sort the indices based on the values in x in descending order
+  std::sort(indices.begin(), indices.end(), [&x](int i, int j) {
+    return x[i] > x[j];
+  });
+
+  return indices;
+}
+
+
+//' Reorder a int vector by indices
+//' equivalent to R vector[indices]
+//' @param values the vector to reorder/subset
+//' @param indices integer vector of indices to order by
+// [[Rcpp::export]]
+std::vector<int> reorder(const std::vector<int>& values, const std::vector<int>& indices) {
+
+  int n = indices.size();
+  std::vector<int> result(n);
+
+  for (int i = 0; i < n; ++i) {
+    result[i] = values[indices[i]];  
+  }
+
+  return result;
+}
+
+
 //' Variance for a logit-transformed proportion
 //' @param events double, number of events
 //' @param n double, number of trials
@@ -16,7 +58,8 @@ double varproplogit(double events, double n, double corr) {
 
 }
 
-
+//' Logit transformation of a double
+//' @param x double to transform
 // [[Rcpp::export]]
 double logittrans(double x) {
 
@@ -29,6 +72,7 @@ double logittrans(double x) {
 //' TPR
 //' @param r response vector, 0 / 1
 //' @param p prediction vector, 0 / 1
+//' @param corr continuity correction
 //' 
 //' @keywords Internal
 // [[Rcpp::export]]
@@ -54,6 +98,8 @@ NumericVector tpr(IntegerVector r, IntegerVector p, double corr) {
 
   return res;
 }
+
+
 
 //' FPR
 //' @param r response vector, 0 / 1
@@ -87,42 +133,85 @@ NumericVector fpr(IntegerVector r, IntegerVector p, double corr) {
 
 
 
-
-
-
-//' Variance for a proportion
-//' @param est vector of tpr or fpr
-//' @param n number of positives in r or negatives in r
+//' Calculates ROC curve (tpr and fpr at each cutoff)
+//'
+//' Using a fast greedy algorithm
+//'
+//' @param response integer, response vector
+//' @param prediction double, predictions
+//' @param corr Continuity correction
 //' 
 //' @keywords Internal
 // [[Rcpp::export]]
-NumericVector var_prop(NumericVector est, double n) {
-  int len = est.length();
-  NumericVector variances(len);
+NumericMatrix get_roc (
+    std::vector<int> response, 
+    std::vector<double> prediction, 
+    double corr
+    ) {
 
-  for (int i = 0; i < len; i++) {
-    variances[i] = (est[i] * (1 - est[i])) / n;
+  // initialize stuff
+  int n = response.size();
+  //double tmp = 1.0;
+  NumericMatrix result(n + 1, 4);
+
+  // tpr calculation is faster if we order response first
+  std::vector<int> index = order_descending(prediction);
+  std::vector<int> ordered_response = reorder(response, index);
+
+  //std::vector<int> tpc = cumsum_rcpp(ordered_response, corr);
+  double events = std::accumulate(response.begin(), response.end(), 0) * 1.0;
+  double non_events = n - events;
+
+  events = events + 2 * corr;
+  non_events = non_events + 2 * corr;
+
+  // initialize vectors to fill
+  NumericVector tpc(n + 1);
+  NumericVector tpr(n + 1);
+  NumericVector fpc(n + 1);
+  NumericVector fpr(n + 1);
+  NumericVector var_tpr(n + 1);
+  NumericVector var_fpr(n + 1);
+
+  // add 0 at the start so curve always starts from 0
+  tpc[0] = 0.0;
+  fpc[0] = 0.0;
+  tpr[0] = logittrans(corr / events);
+  fpr[0] = logittrans(corr / non_events);
+  var_tpr[0] = varproplogit(0.0, events, corr);
+  var_fpr[0] = varproplogit(0.0, non_events, corr);
+
+  // Main part - loop to fill values:
+  for (int i = 1; i < tpc.size(); i++) {
+
+    tpc[i] = tpc[i - 1] + ordered_response[i - 1];
+    fpc[i] = fpc[i - 1] - (ordered_response[i - 1] - 1);
+
+    // logit transform
+    tpr[i] = logittrans((tpc[i] + corr) / events);
+    fpr[i] = logittrans((fpc[i] + corr) / non_events);
+
+    // Already transformed variance of TPR and FPR
+    var_tpr[i] = varproplogit(tpc[i], events, corr);
+    var_fpr[i] = varproplogit(fpc[i], non_events, corr);
+
   }
 
-  return variances;
-}
-
-//' check if a value is bigger than a cutoff
-//' @param score NumericVector of scores
-//' @param cutoff double, the cutoff
-//' 
-//' @keywords Internal
-// [[Rcpp::export]]
-IntegerVector cut_off(NumericVector score, double cutoff) {
-  int len = score.length();
-  IntegerVector result(len);
-
-  for (int i = 0; i < len; i++) {
-    result[i] = (score[i] > cutoff) ? 1 : 0;
-  }
+  // Return as matrix with 4 columns
+  result(_, 0) = fpr;
+  result(_, 1) = tpr;
+  result(_, 2) = var_fpr;
+  result(_, 3) = var_tpr;
 
   return result;
+
 }
+
+
+
+
+
+
 
 //' transform variances to logit scale
 //' @param var NumericVector of variances
@@ -142,89 +231,8 @@ NumericVector varlogit(NumericVector var, NumericVector est) {
 }
 
 
-//' Apply all possible cutoffs 
-//' 
-//' @param score the score
-//' @param unique_vals the possible cutoffs
-//' 
-//' @return 
-//' A matrix of dimensions length(score) x length(cutoffs)
-//' 
-//' 
-//' @keywords Internal
-// [[Rcpp::export]]
-NumericMatrix apply_cut_off(NumericVector score, NumericVector unique_vals) {
-  int len = unique_vals.length() - 1;
-  int score_len = score.length();
-  NumericMatrix res(score_len, len);
-
-  for (int i = 0; i < len; i++) {
-    res(_, i) = cut_off(score, unique_vals[i]);
-  }
-
-  return res;
-}
-
-//' Function to count number of val in x
-//' @param x IntegerVector
-//' @param val int, the value to count
-//' 
-//' @keywords Internal
-// [[Rcpp::export]]
-int count_vals(IntegerVector x, int val) {
-  int count = 0;
-  for (int i = 0; i < x.length(); i++) {
-    if (x[i] == val) {
-      count++;
-    }
-  }
-  return count;
-}
 
 
-//' Function to apply metrics
-//'
-//' @param m matrix with one column for each cutoff and one row for each 
-//' value in score
-//' @param r binary response vector
-//' 
-//' @return 
-//' a list with 3 elements:
-//' \item{tpri}{TPR values}
-//' \item{fpri}{FPR values}
-//' \item{vartpri}{variance for TPR}
-//' 
-//' @keywords Internal
-//'
-// [[Rcpp::export]]
-NumericMatrix apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr) {
-
-  int len = m.ncol();
-  NumericVector tpri(len);
-  NumericVector fpri(len);
-  NumericVector vartpri(len);
-  NumericVector varfpri(len);
-  
-  //int pos = count_vals(r, 1);
-  
-  for (int i = 0; i < len; i++) {
-    IntegerVector col = m(_, i);
-    NumericVector tmp0 = tpr(r, col, corr);
-    NumericVector tmp1 = fpr(r, col, corr);
-    tpri[i] = tmp0[0];
-    fpri[i] = tmp1[0];
-    vartpri[i] = tmp0[1];
-    varfpri[i] = tmp1[1];
-  }
-  
-  NumericMatrix result(len, 4);
-  result(_, 0) = fpri;
-  result(_, 1) = tpri;
-  result(_, 2) = varfpri;
-  result(_, 3) = vartpri;
-
-  return result;
-}
 
 
 // Function to combine two NumericVectors

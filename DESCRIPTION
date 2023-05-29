@@ -1,7 +1,7 @@
 Package: rocmice
 Type: Package
 Title: ROC in the Presence of Missing Data
-Version: 0.1.0
+Version: 0.1.1
 Date: 2023-05-12
 Author: Jonas Schropp
 Maintainer: Jonas Schropp <jonas.schropp@protonmail.com>

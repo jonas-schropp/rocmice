@@ -142,8 +142,33 @@ while the one on complete cases shows an overly optimistic bias.
 
 ## Comparing the AUC between two groups
 
-We rely on `pROC::roc` for the calculation of the ROC for each group and
-imputation.
+To compare the area under the curve, we rely on a modified version of
+Delong’s test that pools the variance of AUC1 - AUC2 within and between
+each imputation using Rubin’s Rules.
+
+``` r
+mi_roc_test(
+  data = patho$patho_imp,
+  target = "outcome",
+  score = "score",
+  group = "X4",
+  groups = c(0, 1),
+  levels = c(0, 1),
+  direction = "<",
+  paired = FALSE
+) |> 
+  round(3)
+```
+
+    ##   delta_auc auc1  auc2 t.value p.value var.total var.within var.between  riv
+    ## 1     0.438  0.8 0.362   4.663       0     0.094       0.09       0.003 0.04
+    ##   lambda   fmi
+    ## 1  0.038 0.049
+
+Alternatively, you could rely on `pROC::roc` for the calculation of the
+ROC for each group and imputation. This results in more code and
+slightly longer computation time, but might be helpful if you need to
+access the objects for each imputation created by `pROC` directly.
 
 ``` r
 g1 <- list()
@@ -153,28 +178,24 @@ for (i in 1:length(patho$patho_imp)) {
   g1[[i]] <- pROC::roc(
     outcome ~ score, 
     data = patho$patho_imp[[i]][patho$patho_imp[[i]]$X4 == 0, ],
-    direction = ">", levels = c(0, 1)
+    direction = "<", levels = c(0, 1)
     )
   g2[[i]] <- pROC::roc(
     outcome ~ score, 
     data = patho$patho_imp[[i]][patho$patho_imp[[i]]$X4 == 1, ],
-    direction = ">", levels = c(0, 1)
+    direction = "<", levels = c(0, 1)
     )
 }
 ```
 
-To compare the area under the curve, we rely on a modified version of
-Delong’s test that pools the variance of AUC1 - AUC2 within and between
-each imputation using Rubin’s Rules.
-
 ``` r
-mi_roc_test(g1, g2, paired = FALSE)
+mi_roc_test(rocs1 = g1, rocs2 = g2, paired = FALSE) |> round(3)
 ```
 
-    ##    delta_auc   t.value      p.value  var.total var.within var.between
-    ## 1 -0.4382247 -4.662933 6.173937e-06 0.09398048 0.09036396 0.003013763
-    ##          riv     lambda       fmi
-    ## 1 0.04002165 0.03848156 0.0493133
+    ##   delta_auc auc1  auc2 t.value p.value var.total var.within var.between  riv
+    ## 1     0.438  0.8 0.362   4.663       0     0.094       0.09       0.003 0.04
+    ##   lambda   fmi
+    ## 1  0.038 0.049
 
 ## Comparing the AUC for two scores
 
@@ -194,7 +215,7 @@ pl2 <- ggplot(patho$patho_imp[[1]], aes(X4, fill = factor(outcome))) +
 ggpubr::ggarrange(pl1, pl2)
 ```
 
-![](Readme_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](Readme_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 It does appear like group 1 is also several times less likely to suffer
 from the outcome condition, so we could incorporate that information
@@ -205,35 +226,30 @@ calc_score2 <- function(d) {
   eta <- 0.5 * d[["X1"]] + d[["X2"]] + 1.5 * d[["X3"]] + 4 * d[["X4"]]
   rocmice:::invlogit(eta)
 }
+
+for (i in 1:length(patho$patho_imp)) {
+  patho$patho_imp[[i]]$score2 <- calc_score2(patho$patho_imp[[i]])
+}
 ```
 
-We can again loop over each imputation to calculate the ROC (you can of
-course also use `with` or `lapply` or `map` if you prefer) and then
-compare the two lists using `mi_roc_test`.
+If your imputed data sets are in a long format, you can use the same
+syntax as above. Alternatively, you can specify two score variables like
+below if the data sets are in wide format (like ours here):
 
 ``` r
-g1 <- list()
-g2 <- list()
-for (i in 1:length(patho$patho_imp)) {
-  
-  patho$patho_imp[[i]]$score2 <- calc_score2(patho$patho_imp[[i]])
-  
-  g1[[i]] <- pROC::roc(
-    outcome ~ score, 
-    data = patho$patho_imp[[i]],
-    direction = ">", levels = c(0, 1)
-    )
-  g2[[i]] <- pROC::roc(
-    outcome ~ score2, 
-    data = patho$patho_imp[[i]],
-    direction = ">", levels = c(0, 1)
-    )
-}
-
-mi_roc_test(g1, g2, paired = TRUE)
+mi_roc_test(
+  data = patho$patho_imp,
+  target = "outcome",
+  score = "score",
+  score2 = "score2",
+  levels = c(0, 1),
+  direction = "<",
+  paired = TRUE
+) |> 
+  round(3)
 ```
 
-    ##    delta_auc         Z     p.value    var.total   var.within  var.between
-    ## 1 -0.1204099 -5.517085 3.44668e-08 0.0004763271 0.0004185918 4.811273e-05
-    ##         riv    lambda       fmi
-    ## 1 0.1379274 0.1212093 0.1275944
+    ##   delta_auc  auc1  auc2     Z p.value var.total var.within var.between   riv
+    ## 1      0.12 0.525 0.405 5.517       0         0          0           0 0.138
+    ##   lambda   fmi
+    ## 1  0.121 0.128

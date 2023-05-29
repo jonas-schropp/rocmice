@@ -49,6 +49,8 @@ pool_roc_rr <- function(
     verbose = TRUE
 ) {
   
+  
+  
   #if (length(target) == 1) {
   #  r <- data[[1]][[target]] 
   #} else if (is.null(target)) {
@@ -70,7 +72,13 @@ pool_roc_rr <- function(
     
     r <- data[[i]][[target]] 
     p <- data[[i]][[score]]
-    m <- apply_cut_off(p, unique_vals)
+    
+    if (any(is.na(r)) | any(is.na(p))) {
+      stop("Missing values in target or score in data set ", i, 
+           ". Please remove missing values prior to calling pool_roc_rr.")
+    }
+    #m <- apply_cut_off(p, unique_vals)
+    
     zero <- c(
       tpr(r, rep(0, length(r)), corr), 
       fpr(r, rep(0, length(r)), corr)[2]
@@ -81,7 +89,8 @@ pool_roc_rr <- function(
       fpr(r, rep(1, length(r)), corr)[2]
     )
     
-    cs[[i]] <- apply_metrics(m, r, corr) |> 
+    #cs[[i]] <- apply_metrics(m, r, corr) |> 
+    cs[[i]] <- get_roc(r, p, corr) |> 
       interpol(fpr_vals, zero)
     
     if (verbose) setTxtProgressBar(pb,i)
@@ -148,34 +157,7 @@ interpol <- function(l, fpr_vals, zero) {
 }
 
 
-#' Adds roc variance to df following the formula in Martinez
-#' 
-#' varroc = vartpr + varfpr
-#' 
-#' @param df data.frame with tpr, fpr, vartpr
-#' @param r response vector
-#' @param p prediction vector
-#' @param corr continuity correction
-#' 
-#' @keywords Internal
-add_var_roc <- function(df, r, p, corr) {
-  
-  neg <- sum(r == 0) + 2*corr
-  pos <- sum(r == 1) + 2*corr
-  
-  # new
-  #eneg <- sum(r == 0 & p == 1) + corr
-  #epos <- sum(r == 1 & p == 1) + corr
-  
-  #vartpri <- varlogit2(df$tpri, pos)
-  #varfpri <- varlogit2(df$fpri, neg)
-  
-  vartpri <- var_prop(df$tpri, pos)
-  varfpri <- var_prop(df$fpri, neg)
-  df$varroci <- vartpri + varfpri
- 
-  df 
-}
+
 
 
 #' transform metrics

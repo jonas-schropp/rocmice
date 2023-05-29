@@ -138,8 +138,28 @@ on complete cases shows an overly optimistic bias.
 
 ## Comparing the AUC between two groups
 
-We rely on `pROC::roc` for the calculation of the ROC for each group and 
-imputation. 
+To compare the area under the curve, we rely on a modified version of 
+Delong's test that pools the variance of AUC1 - AUC2 within and between each 
+imputation using Rubin's Rules.
+
+```{r}
+mi_roc_test(
+  data = patho$patho_imp,
+  target = "outcome",
+  score = "score",
+  group = "X4",
+  groups = c(0, 1),
+  levels = c(0, 1),
+  direction = "<",
+  paired = FALSE
+) |> 
+  round(3)
+```
+
+Alternatively, you could rely on `pROC::roc` for the calculation of the ROC for 
+each group and imputation. This results in more code and slightly longer 
+computation time, but might be helpful if you need to access the objects 
+for each imputation created by `pROC` directly.
 
 ```{r}
 g1 <- list()
@@ -149,22 +169,18 @@ for (i in 1:length(patho$patho_imp)) {
   g1[[i]] <- pROC::roc(
     outcome ~ score, 
     data = patho$patho_imp[[i]][patho$patho_imp[[i]]$X4 == 0, ],
-    direction = ">", levels = c(0, 1)
+    direction = "<", levels = c(0, 1)
     )
   g2[[i]] <- pROC::roc(
     outcome ~ score, 
     data = patho$patho_imp[[i]][patho$patho_imp[[i]]$X4 == 1, ],
-    direction = ">", levels = c(0, 1)
+    direction = "<", levels = c(0, 1)
     )
 }
 ```
 
-To compare the area under the curve, we rely on a modified version of 
-Delong's test that pools the variance of AUC1 - AUC2 within and between each 
-imputation using Rubin's Rules.
-
 ```{r}
-mi_roc_test(g1, g2, paired = FALSE)
+mi_roc_test(rocs1 = g1, rocs2 = g2, paired = FALSE) |> round(3)
 ```
 
 ## Comparing the AUC for two scores
@@ -194,32 +210,27 @@ calc_score2 <- function(d) {
   eta <- 0.5 * d[["X1"]] + d[["X2"]] + 1.5 * d[["X3"]] + 4 * d[["X4"]]
   rocmice:::invlogit(eta)
 }
+
+for (i in 1:length(patho$patho_imp)) {
+  patho$patho_imp[[i]]$score2 <- calc_score2(patho$patho_imp[[i]])
+}
 ```
 
-We can again loop over each imputation to calculate the ROC (you can of course 
-also use `with` or `lapply` or `map` if you prefer) and then compare the 
-two lists using `mi_roc_test`.
+If your imputed data sets are in a long format, you can use the same syntax 
+as above. Alternatively, you can specify two score variables like below if 
+the data sets are in wide format (like ours here):
 
 ```{r}
-g1 <- list()
-g2 <- list()
-for (i in 1:length(patho$patho_imp)) {
-  
-  patho$patho_imp[[i]]$score2 <- calc_score2(patho$patho_imp[[i]])
-  
-  g1[[i]] <- pROC::roc(
-    outcome ~ score, 
-    data = patho$patho_imp[[i]],
-    direction = ">", levels = c(0, 1)
-    )
-  g2[[i]] <- pROC::roc(
-    outcome ~ score2, 
-    data = patho$patho_imp[[i]],
-    direction = ">", levels = c(0, 1)
-    )
-}
-
-mi_roc_test(g1, g2, paired = TRUE)
+mi_roc_test(
+  data = patho$patho_imp,
+  target = "outcome",
+  score = "score",
+  score2 = "score2",
+  levels = c(0, 1),
+  direction = "<",
+  paired = TRUE
+) |> 
+  round(3)
 ```
 
 

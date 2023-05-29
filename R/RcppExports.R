@@ -5,6 +5,23 @@ delongPlacementsCpp <- function(roc) {
     .Call(`_rocmice_delongPlacementsCpp`, roc)
 }
 
+#' C++ implementation of R `order`
+#' Assuming we don't have any missing values, only one vector to order and 
+#' always want to order descending.
+#' @param x double vector to order
+#' @keywords Internal
+order_descending <- function(x) {
+    .Call(`_rocmice_order_descending`, x)
+}
+
+#' Reorder a int vector by indices
+#' equivalent to R vector[indices]
+#' @param values the vector to reorder/subset
+#' @param indices integer vector of indices to order by
+reorder <- function(values, indices) {
+    .Call(`_rocmice_reorder`, values, indices)
+}
+
 #' Variance for a logit-transformed proportion
 #' @param events double, number of events
 #' @param n double, number of trials
@@ -15,6 +32,8 @@ varproplogit <- function(events, n, corr) {
     .Call(`_rocmice_varproplogit`, events, n, corr)
 }
 
+#' Logit transformation of a double
+#' @param x double to transform
 logittrans <- function(x) {
     .Call(`_rocmice_logittrans`, x)
 }
@@ -22,6 +41,7 @@ logittrans <- function(x) {
 #' TPR
 #' @param r response vector, 0 / 1
 #' @param p prediction vector, 0 / 1
+#' @param corr continuity correction
 #' 
 #' @keywords Internal
 tpr <- function(r, p, corr) {
@@ -38,22 +58,17 @@ fpr <- function(r, p, corr) {
     .Call(`_rocmice_fpr`, r, p, corr)
 }
 
-#' Variance for a proportion
-#' @param est vector of tpr or fpr
-#' @param n number of positives in r or negatives in r
+#' Calculates ROC curve (tpr and fpr at each cutoff)
+#'
+#' Using a fast greedy algorithm
+#'
+#' @param response integer, response vector
+#' @param prediction double, predictions
+#' @param corr Continuity correction
 #' 
 #' @keywords Internal
-var_prop <- function(est, n) {
-    .Call(`_rocmice_var_prop`, est, n)
-}
-
-#' check if a value is bigger than a cutoff
-#' @param score NumericVector of scores
-#' @param cutoff double, the cutoff
-#' 
-#' @keywords Internal
-cut_off <- function(score, cutoff) {
-    .Call(`_rocmice_cut_off`, score, cutoff)
+get_roc <- function(response, prediction, corr) {
+    .Call(`_rocmice_get_roc`, response, prediction, corr)
 }
 
 #' transform variances to logit scale
@@ -63,47 +78,6 @@ cut_off <- function(score, cutoff) {
 #' @keywords Internal
 varlogit <- function(var, est) {
     .Call(`_rocmice_varlogit`, var, est)
-}
-
-#' Apply all possible cutoffs 
-#' 
-#' @param score the score
-#' @param unique_vals the possible cutoffs
-#' 
-#' @return 
-#' A matrix of dimensions length(score) x length(cutoffs)
-#' 
-#' 
-#' @keywords Internal
-apply_cut_off <- function(score, unique_vals) {
-    .Call(`_rocmice_apply_cut_off`, score, unique_vals)
-}
-
-#' Function to count number of val in x
-#' @param x IntegerVector
-#' @param val int, the value to count
-#' 
-#' @keywords Internal
-count_vals <- function(x, val) {
-    .Call(`_rocmice_count_vals`, x, val)
-}
-
-#' Function to apply metrics
-#'
-#' @param m matrix with one column for each cutoff and one row for each 
-#' value in score
-#' @param r binary response vector
-#' 
-#' @return 
-#' a list with 3 elements:
-#' \item{tpri}{TPR values}
-#' \item{fpri}{FPR values}
-#' \item{vartpri}{variance for TPR}
-#' 
-#' @keywords Internal
-#'
-apply_metrics <- function(m, r, corr) {
-    .Call(`_rocmice_apply_metrics`, m, r, corr)
 }
 
 combineVecs <- function(A, B) {

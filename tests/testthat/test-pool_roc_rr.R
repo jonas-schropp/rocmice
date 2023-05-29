@@ -10,47 +10,9 @@ test_that("fpr works", {
 })
 
 
-test_that("var_prop works", {
-  est <- c(0.2, 0.4, 0.6, 0.8)
-  n <- 100
-  expect_equal(var_prop(est, n), c(0.0016, 0.0024, 0.0024, 0.0016))
-})
-
-
-test_that("cut_off works", {
-  score <- c(1.2, 0.5, 0.8, 1.5, 2.1)
-  cutoff <- 1
-  expect_equal(cut_off(score, cutoff), c(1,0,0,1,1))
-})
-
-
 m <- matrix(
   c(rep(1,8),0,1,rep(0,5)),
   nrow = 5, ncol = 3, byrow=T)
-
-test_that("apply_cut_off works", {
-  score <- c(1.2, 0.8, 0.5, 0.3, 0.1)
-  unique_vals <- c(0.2, 0.4, 0.6, 0.8)
-  expect_equal(
-    apply_cut_off(score, unique_vals), 
-    m)
-})
-
-
-r <- c(1, 0, 1, 0, 1)
-l <- matrix(
-  c(
-    qlogis(
-      c(1, 1/2, 1/2,
-        2/3, 2/3, 2/3)
-      ),
-    Inf, 2, 2,
-    1.5, 1.5, 1.5),
-  3, 4
-)
-test_that("apply_metrics works", {
-  expect_equal(apply_metrics(m, r, 0), l, tolerance = 3)
-})
 
 
 

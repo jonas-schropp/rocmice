@@ -21,6 +21,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// order_descending
+std::vector<int> order_descending(std::vector<double> x);
+RcppExport SEXP _rocmice_order_descending(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(order_descending(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// reorder
+std::vector<int> reorder(const std::vector<int>& values, const std::vector<int>& indices);
+RcppExport SEXP _rocmice_reorder(SEXP valuesSEXP, SEXP indicesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type indices(indicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(reorder(values, indices));
+    return rcpp_result_gen;
+END_RCPP
+}
 // varproplogit
 double varproplogit(double events, double n, double corr);
 RcppExport SEXP _rocmice_varproplogit(SEXP eventsSEXP, SEXP nSEXP, SEXP corrSEXP) {
@@ -71,27 +94,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// var_prop
-NumericVector var_prop(NumericVector est, double n);
-RcppExport SEXP _rocmice_var_prop(SEXP estSEXP, SEXP nSEXP) {
+// get_roc
+NumericMatrix get_roc(std::vector<int> response, std::vector<double> prediction, double corr);
+RcppExport SEXP _rocmice_get_roc(SEXP responseSEXP, SEXP predictionSEXP, SEXP corrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type est(estSEXP);
-    Rcpp::traits::input_parameter< double >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(var_prop(est, n));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cut_off
-IntegerVector cut_off(NumericVector score, double cutoff);
-RcppExport SEXP _rocmice_cut_off(SEXP scoreSEXP, SEXP cutoffSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type score(scoreSEXP);
-    Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
-    rcpp_result_gen = Rcpp::wrap(cut_off(score, cutoff));
+    Rcpp::traits::input_parameter< std::vector<int> >::type response(responseSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type prediction(predictionSEXP);
+    Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_roc(response, prediction, corr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -104,43 +116,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type var(varSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type est(estSEXP);
     rcpp_result_gen = Rcpp::wrap(varlogit(var, est));
-    return rcpp_result_gen;
-END_RCPP
-}
-// apply_cut_off
-NumericMatrix apply_cut_off(NumericVector score, NumericVector unique_vals);
-RcppExport SEXP _rocmice_apply_cut_off(SEXP scoreSEXP, SEXP unique_valsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type score(scoreSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type unique_vals(unique_valsSEXP);
-    rcpp_result_gen = Rcpp::wrap(apply_cut_off(score, unique_vals));
-    return rcpp_result_gen;
-END_RCPP
-}
-// count_vals
-int count_vals(IntegerVector x, int val);
-RcppExport SEXP _rocmice_count_vals(SEXP xSEXP, SEXP valSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type val(valSEXP);
-    rcpp_result_gen = Rcpp::wrap(count_vals(x, val));
-    return rcpp_result_gen;
-END_RCPP
-}
-// apply_metrics
-NumericMatrix apply_metrics(const IntegerMatrix& m, const IntegerVector& r, double corr);
-RcppExport SEXP _rocmice_apply_metrics(SEXP mSEXP, SEXP rSEXP, SEXP corrSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const IntegerMatrix& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type r(rSEXP);
-    Rcpp::traits::input_parameter< double >::type corr(corrSEXP);
-    rcpp_result_gen = Rcpp::wrap(apply_metrics(m, r, corr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -251,16 +226,14 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rocmice_delongPlacementsCpp", (DL_FUNC) &_rocmice_delongPlacementsCpp, 1},
+    {"_rocmice_order_descending", (DL_FUNC) &_rocmice_order_descending, 1},
+    {"_rocmice_reorder", (DL_FUNC) &_rocmice_reorder, 2},
     {"_rocmice_varproplogit", (DL_FUNC) &_rocmice_varproplogit, 3},
     {"_rocmice_logittrans", (DL_FUNC) &_rocmice_logittrans, 1},
     {"_rocmice_tpr", (DL_FUNC) &_rocmice_tpr, 3},
     {"_rocmice_fpr", (DL_FUNC) &_rocmice_fpr, 3},
-    {"_rocmice_var_prop", (DL_FUNC) &_rocmice_var_prop, 2},
-    {"_rocmice_cut_off", (DL_FUNC) &_rocmice_cut_off, 2},
+    {"_rocmice_get_roc", (DL_FUNC) &_rocmice_get_roc, 3},
     {"_rocmice_varlogit", (DL_FUNC) &_rocmice_varlogit, 2},
-    {"_rocmice_apply_cut_off", (DL_FUNC) &_rocmice_apply_cut_off, 2},
-    {"_rocmice_count_vals", (DL_FUNC) &_rocmice_count_vals, 2},
-    {"_rocmice_apply_metrics", (DL_FUNC) &_rocmice_apply_metrics, 3},
     {"_rocmice_combineVecs", (DL_FUNC) &_rocmice_combineVecs, 2},
     {"_rocmice_getUniqueValues", (DL_FUNC) &_rocmice_getUniqueValues, 1},
     {"_rocmice_findIndex", (DL_FUNC) &_rocmice_findIndex, 2},

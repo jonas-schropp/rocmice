@@ -6,26 +6,91 @@
 #' 
 #' @describeIn mi_roc_test
 #' 
-#' @param rocs1 A list of "roc" objects for each imputed data set
-#' @param rocs2 A list of "roc" objects for each imputed data set 
-#' to compare to rocs1
-#' @param paired Are the roc curves paired?
+#' @param data A list of imputed data sets.
+#' @param target Character, the name of the outcome variable in data.
+#' @param score Character, the name of the predictions variable in data.
+#' @param score2 Optional: if you are testing AUC for paired ROC curves and 
+#' your data.frames are in wide format, the name of the predictions variable 
+#' for your second score in data.
+#' @param group Character, the name of the variable that the defines the groups 
+#' to compare. Overwritten by `score2` if it is specified.
+#' @param groups The levels in `group` to compare. If not specified, the unique 
+#' values in `data[[1]]` are used. If `group` has more than two values, or one 
+#' of the groups is rare and might not occur in all imputations (which could 
+#' bias estimates!), this must be specified. Overwritten by `score2`.
+#' @param rocs1 A list of `pROC::roc` objects for each imputed data set. 
+#' Overwrites all other arguments. 
+#' @param rocs2 A list of `pROC::roc` objects for each imputed data set. 
+#' to compare to rocs1. Overwrites all other arguments. 
+#' @param paired Logical. Are the ROC curves paired?
+#' @param levels Levels of the outcome variable `target`. By default `c(0, 1)`.
+#' @param direction In which direction to make the comparison? The default `<` 
+#' is different from `pROC` because direction is not automatically checked 
+#' (which could lead to weird results after multiple imputation) and means that 
+#' predictor values for controls are assumed to be lower than for cases. 
 #' 
 #' @author 
-#' Jonas Schropp, code fragments from `pROC::roc.test` and `MKmisc::mi.t.test`.
+#' Jonas Schropp, some code from `pROC::roc.test`.
 #' 
 #' @export
 #' 
-mi_roc_test <- function(rocs1, rocs2, paired = FALSE) {
+mi_roc_test <- function(
+    data, 
+    target, 
+    score, 
+    score2 = NULL,
+    group,
+    groups = NULL,
+    rocs1 = NULL, 
+    rocs2 = NULL, 
+    paired = FALSE, 
+    levels = c(0, 1),
+    direction = '<'
+    ) {
   
-  if (length(rocs1) != length(rocs2)) {
-    stop("rocs1 and rocs2 must be the same length")
+  if (is.null(direction)) {
+    message("Setting direction to '<'.")
+    direction <- '<'
   }
   
+  if (is.null(levels)) {
+    message("Setting levels to c(0, 1).")
+    levels <- c(0, 1)
+  }
+  
+  if (!is.null(rocs1)) {
+    if (is.null(rocs2)) {
+      stop("If rocs1 is supplied, rocs2 must be supplied as well.")
+    }
+    if (length(rocs1) != length(rocs2)) {
+      stop("rocs1 and rocs2 must be the same length")
+    }
+  }
+
+  
   if (paired) {
+    
+    if (is.null(rocs1)) {
+      
+      tmp <- prep_rocs.paired(
+        data, target, score, score2, group, groups, levels, direction  
+      )
+      rocs1 <- tmp[[1]]
+      rocs2 <- tmp[[2]]
+    }
+    
     mi_roc_test.paired(rocs1, rocs2)
+    
   } else if (!paired) {
+    
+    if (is.null(rocs1)) {
+      tmp <- prep_rocs.unpaired(data, target, score, group, groups, direction)
+      rocs1 <- tmp[[1]]
+      rocs2 <- tmp[[2]]
+    }
+    
     mi_roc_test.unpaired(rocs1, rocs2)
+    
   }
   
 }
@@ -145,6 +210,8 @@ mi_roc_test.unpaired <- function(rocs1, rocs2) {
   
   res <- data.frame(
     delta_auc = thetadiff, 
+    auc1 = aucR,
+    auc2 = aucS,
     t.value = t, 
     #df = df.mod, 
     p.value = p,
@@ -200,7 +267,7 @@ mi_roc_test.paired <- function(rocs1, rocs2) {
   
   for (i in 1:m) {
     
-    # C function from pROC, rewrite in C++ for CMD checks???
+    # C++ function from pROC
     VR <- delongPlacements(rocs1[[i]])
     VS <- delongPlacements(rocs2[[i]])
     
@@ -300,6 +367,8 @@ mi_roc_test.paired <- function(rocs1, rocs2) {
   
   res <- data.frame(
     delta_auc = thetadiff, 
+    auc1 = aucR,
+    auc2 = aucS,
     Z = zscore, 
     #df = df.mod, too high? why?
     #p.value.t = p,
@@ -328,15 +397,6 @@ mi_roc_test.paired <- function(rocs1, rocs2) {
 delongPlacements <- function(roc) {
   
   placements <- delongPlacementsCpp(roc)
-  auc <- roc$auc/ifelse(roc$percent, 100, 1)
-  if (!isTRUE(all.equal(placements$theta, auc))) {
-    sessionInfo <- sessionInfo()
-    save(roc, placements, sessionInfo, file = "pROC_bug.RData")
-    stop(
-      sprintf(
-        "pROC: error in calculating DeLong's theta: got %.20f instead of %.20f. Diagnostic data saved in pROC_bug.RData. Please report this bug to <%s>.", 
-        placements$theta, auc, utils::packageDescription("pROC")$BugReports))
-  }
   
   return(placements)
   
@@ -345,3 +405,155 @@ delongPlacements <- function(roc) {
 
 
 
+#' Extract cases and controls for two groups 
+#' 
+#' Helper function to prepare data for delongPlacements
+#' 
+#' @param d a data.frame
+#' @param target character, the outcome variable
+#' @param score character, the prediction variable
+#' @param group character, the group variable
+#' @param groups vector with the two group levels to compare
+#' @param m imputation number
+#' 
+#' @keywords Internal
+#' 
+cases_controls.long <- function(d, target, score, group, groups, m) {
+  
+  roc1 <- list()
+  roc2 <- list()
+  
+  if (any(groups != sort(unique(d[[group]])))) {
+    warning("Different groups in imputation ", m, " detected. 
+            Results might be incorrect.")
+  }
+  
+  roc1$cases <- d[d[[group]] == groups[1] & d[[target]] == 1, ][[score]]
+  roc1$controls <- d[d[[group]] == groups[1] & d[[target]] == 0, ][[score]]
+  roc2$cases <- d[d[[group]] == groups[2] & d[[target]] == 1, ][[score]]
+  roc2$controls <- d[d[[group]] == groups[2] & d[[target]] == 0, ][[score]]
+  
+  return(list(roc1, roc2))
+  
+}
+
+
+
+#' Extract cases and controls for two groups 
+#' 
+#' Helper function to prepare data for delongPlacements
+#' 
+#' @param d a data.frame
+#' @param target character, the outcome variable
+#' @param score character, the prediction variable for group 1
+#' @param score2 character, the prediction variable for group 2
+#' 
+#' @keywords Internal
+#' 
+cases_controls.wide <- function(d, target, score, score2) {
+  
+  roc1 <- list()
+  roc2 <- list()
+  
+  roc1$cases <- d[d[[target]] == 1, ][[score]]
+  roc1$controls <- d[d[[target]] == 0, ][[score]]
+  roc2$cases <- d[d[[target]] == 1, ][[score2]]
+  roc2$controls <- d[d[[target]] == 0, ][[score2]]
+  
+  return(list(roc1, roc2))
+  
+}
+
+
+
+
+#' Prepares list of ROCs for paired case
+#' 
+#' @param data see mi_roc_test
+#' @param target see mi_roc_test
+#' @param score see mi_roc_test
+#' @param score2 see mi_roc_test
+#' @param group see mi_roc_test
+#' @param groups see mi_roc_test
+#' @param levels see mi_roc_test
+#' @param direction see mi_roc_test
+#' 
+#' @keywords Internal
+prep_rocs.paired <- function(
+    data, target, score, score2, group, groups, levels, direction  
+  ) {
+  
+  rocs1 <- list()
+  rocs2 <- list()
+  
+  if (is.null(score2)) {
+    if (is.null(groups)) {
+      groups <- unique(data[[1]][[group]])
+      if (length(groups) != 2) stop("Can only compare exactly 2 groups.")
+      message("Setting `groups` to ", groups[1], " and ", groups[2], ".")
+    } else {
+      if (length(groups) != 2) stop("Can only compare exactly 2 groups.")
+    }
+    for (m in 1:length(data)){
+      
+      tmp <- cases_controls.long(data[[m]], target, score, group, groups, m)
+      rocs1[[m]] <- tmp[[1]]
+      rocs2[[m]] <- tmp[[2]]
+      rocs1[[m]]$direction <- direction
+      rocs2[[m]]$direction <- direction
+      
+    }
+  } else {
+    
+    for (m in 1:length(data)){
+      
+      tmp <- cases_controls.wide(data[[m]], target, score, score2)
+      rocs1[[m]] <- tmp[[1]]
+      rocs2[[m]] <- tmp[[2]]
+      rocs1[[m]]$direction <- direction
+      rocs2[[m]]$direction <- direction
+      
+    }
+  }
+  
+  return(list(rocs1, rocs2))
+  
+}
+
+
+#' Prepares list of ROCs for unpaired case
+#' 
+#' @param data see mi_roc_test
+#' @param target see mi_roc_test
+#' @param score see mi_roc_test
+#' @param group see mi_roc_test
+#' @param groups see mi_roc_test
+#' @param direction see mi_roc_test
+#' 
+#' @keywords Internal
+prep_rocs.unpaired <- function(data, target, score, group, groups, direction) {
+  
+  rocs1 <- list()
+  rocs2 <- list()
+  
+  if (is.null(groups)) {
+    groups <- unique(data[[1]][[group]])
+    if (length(groups) != 2) stop("Can only compare exactly 2 groups.")
+    message("Setting `groups` to ", groups[1], " and ", groups[2], ".")
+  } else {
+    if (length(groups) != 2) stop("Can only compare exactly 2 groups.")
+  }
+  
+  for (m in 1:length(data)){
+    
+    tmp <- cases_controls.long(data[[m]], target, score, group, groups, m)
+    rocs1[[m]] <- tmp[[1]]
+    rocs2[[m]] <- tmp[[2]]
+    rocs1[[m]]$direction <- direction
+    rocs2[[m]]$direction <- direction
+    
+  }
+  
+  return(list(rocs1, rocs2))
+  
+}

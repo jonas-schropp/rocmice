@@ -6,19 +6,56 @@
 \alias{mi_roc_test.paired}
 \title{Pool Delong Test after Multiple Imputation}
 \usage{
-mi_roc_test(rocs1, rocs2, paired = FALSE)
+mi_roc_test(
+  data,
+  target,
+  score,
+  score2 = NULL,
+  group,
+  groups = NULL,
+  rocs1 = NULL,
+  rocs2 = NULL,
+  paired = FALSE,
+  levels = c(0, 1),
+  direction = "<"
+)
 
 mi_roc_test.unpaired(rocs1, rocs2)
 
 mi_roc_test.paired(rocs1, rocs2)
 }
 \arguments{
+\item{data}{A list of imputed data sets.}
+
+\item{target}{Character, the name of the outcome variable in data.}
+
+\item{score}{Character, the name of the predictions variable in data.}
+
+\item{score2}{Optional: if you are testing AUC for paired ROC curves and 
+your data.frames are in wide format, the name of the predictions variable 
+for your second score in data.}
+
+\item{group}{Character, the name of the variable that the defines the groups 
+to compare. Overwritten by `score2` if it is specified.}
+
+\item{groups}{The levels in `group` to compare. If not specified, the unique 
+values in `data[[1]]` are used. If `group` has more than two values, or one 
+of the groups is rare and might not occur in all imputations (which could 
+bias estimates!), this must be specified. Overwritten by `score2`.}
+
 \item{rocs1}{A list of "roc" objects for each imputed data set}
 
 \item{rocs2}{A list of "roc" objects for each imputed data set 
 to compare to rocs1}
 
-\item{paired}{Are the roc curves paired?}
+\item{paired}{Logical. Are the ROC curves paired?}
+
+\item{levels}{Levels of the outcome variable `target`. By default `c(0, 1)`.}
+
+\item{direction}{In which direction to make the comparison? The default `<` 
+is different from `pROC` because direction is not automatically checked 
+(which could lead to weird results after multiple imputation) and means that 
+predictor values for controls are assumed to be lower than for cases.}
 }
 \description{
 Pools the variance and covariance of two (un-)paired ROC after multiple 
@@ -40,6 +77,6 @@ Paired version
 
 }}
 \author{
-Jonas Schropp, code fragments from `pROC::roc.test` and `MKmisc::mi.t.test`.
+Jonas Schropp, some code from `pROC::roc.test`.
 }
 \keyword{Internal}
