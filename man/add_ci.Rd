@@ -9,9 +9,8 @@ add_ci(df, ci.level, target)
 \arguments{
 \item{df}{data.frame containing:
 \itemize{
-  \item{tpr}{logit-transformed TPR values}
-  \item{fpr}{logit-transformed FPR values}
-  \item{var_tpr}{logit-transformed variance for TPR}
+  \item{roc}{logit-transformed TPR values}
+  \item{var_roc}{logit-transformed variance for TPR}
 }}
 
 \item{ci.level}{double between 0-1.}

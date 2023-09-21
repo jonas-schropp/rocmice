@@ -22,8 +22,8 @@ pool_roc_rr(
 \item{score}{Character, the name of the score variable that should be present 
 in each data.frame in data}
 
-\item{target}{The name of the target variable present in each 
-data.frame  in data (must be binary).}
+\item{target}{The name of the target variable present in each data.frame in 
+data (must be binary).}
 
 \item{unique_vals}{Optional. Define the unique values that should be used as 
 cutoffs for the score variable. If not supplied, every unique cutoff is used.}
@@ -53,10 +53,23 @@ a data.frame with the elements:
 \item{ul_tpr_logit}{description a}
 }
 \description{
-The function `pool_roc_rr` pools roc curves created from a list of multiply 
+The function `pool_roc_rr` pools ROC curves created from a list of multiply 
 imputed data sets by applying Rubin's Rules to the logit-transformed 
 TPR and FPR at each unique value of the supplied score. 
 The function returns a data.frame of transformed TPR and FPR at each cutoff, 
 their respective variances and optionally confidence intervals as well as 
 backtransformed values.
+}
+\details{
+Calculation of confidence intervals is experimental. The lower and upper 
+bounds that are currently supplied are simply the lower and upper bounds of 
+the pooled TPR at a given alpha level. This gives the confidence bands a 
+rugged appearance. Better results could be achieved with bootstrapping, 
+which is currently not implemented because it would be very resource 
+intensive. A general strategy would be to: 
+(1) Draw a bootstrapped sample of the data
+(2) Run `mice` within that bootstrapping sample to create `m` imputed data sets
+(3) Run `pool_roc_rr` to create one pooled roc curve for the sample
+(4) Repeat for `n` bootstrapping samples
+(5) Summarize TPR values for each threshold via quantiles
 }

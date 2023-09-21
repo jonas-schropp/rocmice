@@ -38,8 +38,6 @@ data(patho)
 help("patho")
 ```
 
-    ## starting httpd help server ... done
-
 Notable, it contains a binary variable `outcome` that represents some
 kind of status, for example presence of a disease and a `score` that
 represents the result of some kind of predictive / diagnostic algorithm
@@ -48,23 +46,34 @@ performs worse when `X4` is 1 then when it is 0.
 
 ## Pooling the AUC
 
-We can calculate the AUC for each imputation using `pROC::roc`.
+We can calculate the AUC for each imputation using `pROC::roc` on each
+list element, or, to make it easier, using the provided convenience
+function `apply_roc`.
 
 ``` r
-rocs <- list()
+# So this:
+rocs1 <- list()
 for (i in 1:length(patho$patho_imp)) {
-  rocs[[i]] <- pROC::roc(
+  rocs1[[i]] <- pROC::roc(
     outcome ~ score, 
     data = patho$patho_imp[[i]],
     direction = ">", levels = c(0, 1)
     )
 }
+
+# is pretty much equivalent to this:
+rocs2 <- apply_roc(
+  milist = patho$patho_imp,
+  selection = "all",
+  score = "score", 
+  target = "outcome"
+)
 ```
 
 And then pool it with `pool_auc_rr`:
 
 ``` r
-pool_auc_rr(rocs, ci.level = 0.95, transform = "logit")
+pool_auc_rr(rocs2, ci.level = 0.95, transform = "logit")
 ```
 
     ##         auc        ll        ul auc_logit var_total_logit var_between_logit
@@ -94,6 +103,10 @@ pooled_roc <- pool_roc_rr(
     ## Calculating TPR for every FPR: 
     ## ================================================================================
     ## Combining and pooling results.
+
+    ## Calculation of confidence intervals is experimental. 
+    ##           The lower and upper bounds that are currently supplied are simply 
+    ##           the lower and upper bounds of the pooled TPR at a given alpha level.
 
 Then we plot the ROC for the complete data set and the complete cases
 from the data set with missing values using `plotROC::geom_roc` and add
@@ -139,6 +152,27 @@ ggplot() +
 It is easy to see that the ROC created from multiply imputed data
 closely tracks the one on a complete data set without missing values,
 while the one on complete cases shows an overly optimistic bias.
+
+You can in theory create confidence intervals for the pooled ROC curve,
+but this functionality is experimental and currently simply creates
+pooled confidence intervals for each TPR value:
+
+``` r
+ggplot(pooled_roc, 
+       aes(fpr, roc, ymin = ll_roc, ymax = ul_roc)
+       ) + 
+  geom_ribbon(alpha = 0.2) +
+  geom_step(size = 1) +
+  labs(x = "FPR", y = "TPR") +
+  theme_minimal() +
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  ) +
+  theme_minimal()
+```
+
+![](Readme_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ## Comparing the AUC between two groups
 
@@ -215,7 +249,7 @@ pl2 <- ggplot(patho$patho_imp[[1]], aes(X4, fill = factor(outcome))) +
 ggpubr::ggarrange(pl1, pl2)
 ```
 
-![](Readme_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](Readme_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 It does appear like group 1 is also several times less likely to suffer
 from the outcome condition, so we could incorporate that information

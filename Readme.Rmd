@@ -144,7 +144,26 @@ ggplot() +
 
 It is easy to see that the ROC created from multiply imputed data closely 
 tracks the one on a complete data set without missing values, while the one 
-on complete cases shows an overly optimistic bias.
+on complete cases shows an overly optimistic bias.  
+
+You can in theory create confidence intervals for the pooled ROC curve, but this 
+functionality is experimental and currently simply creates pooled confidence 
+intervals for each TPR value:
+
+```{r warning = FALSE, fig.height = 3.5, fig.width = 3.5}
+ggplot(pooled_roc, 
+       aes(fpr, roc, ymin = ll_roc, ymax = ul_roc)
+       ) + 
+  geom_ribbon(alpha = 0.2) +
+  geom_step(size = 1) +
+  labs(x = "FPR", y = "TPR") +
+  theme_minimal() +
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  ) +
+  theme_minimal()
+```
 
 
 ## Comparing the AUC between two groups

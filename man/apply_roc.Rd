@@ -7,8 +7,8 @@
 apply_roc(
   milist,
   selection,
-  response,
-  predictor,
+  score,
+  target,
   direction = ">",
   levels = c(0, 1),
   algorithm = 6,
@@ -24,10 +24,10 @@ element in milist, or an integer vector containing the indices of the elements
 in milist to use (for example when the first element contains the original 
 data with missing values)}
 
-\item{response}{Character, the name of the response variable that must be 
+\item{score}{Character, the name of the predictor variable that must be 
 available in each data.frame in milist.}
 
-\item{predictor}{Character, the name of the predictor variable that must be 
+\item{target}{Character, the name of the response variable that must be 
 available in each data.frame in milist.}
 
 \item{direction}{either "<" or ">". "auto" is not supported because it might 
